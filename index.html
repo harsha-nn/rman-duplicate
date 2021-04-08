@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restore and duplicate</title>
+    <link type="text/css" rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="grid-container">
+        <!-- <label>Primary info:</label> -->
+        <div class="grid-item-1">
+            What are you planning to do? <br>
+            <!-- <input type="radio" id="restore" name="plan" value="restore">
+            <label for="restore">Restore/Recover a database</label><br> -->
+            <input type="radio" id="active_duplicate" name="plan" value="duplicate" checked>
+            <label for="active_duplicate_q_l">Run Active Duplicate</label><br>
+            <input type="radio" id="backup_duplicate" name="plan" value="duplicate">
+            <label for="backup_duplicate">Run Backup based Duplicate</label><br>
+            <!-- <input type="radio" id="stby" name="plan" value="standby"> -->
+            <label for="standby">standby or clone</label><br>
+            <!-- <div id="which_duplicate"> -->
+                <input type="radio" id="standby" name="dup" value="Active">
+                <label for="standby">Create a Standby</label><br>
+                <input type="radio" id="clone" name="dup" value="Backup" checked>
+                <label for="standby">Clone a database</label><br>
+            <!-- </div> -->
+        </div>
+        <div class="grid-item">
+            Provide database details:
+            <table style="width:100%">
+                <tr>
+                  <th>Property</th>
+                  <th>Source</th>
+                  <th>Destination</th>
+                </tr>
+                <tr>
+                    <td>DB_NAME</td>
+                    <td>
+                        <input type="text" id="db_p_name" value="chicago">
+                    </td>
+                    <td>
+                        <input type="text" id="db_s_name" value="chicago">
+                    </td>
+                </tr>
+                <tr id="l_db_u_name">
+                    <td >DB_UNIQUE_NAME</td>
+                    <td>
+                        <input type="text" id="db_pu_name" value="chicago">
+                    </td>
+                    <td>
+                        <input type="text" id="db_su_name" value="boston">
+                    </td>
+                </tr>
+                <tr id="l_host_name">
+                    <td>HOST</td>
+                    <td>
+                        <input type="text" id="host_p_name" value="primary.oracle.com">
+                    </td>
+                    <td>
+                        <input type="text" id="host_s_name" value="aux.oracle.com">
+                    </td>
+                </tr>
+                <tr id="l_port_name">
+                    <td>PORT</td>
+                    <td>
+                        <input type="text" id="port_p_name" value="1521">
+                    </td>
+                    <td>
+                        <input type="text" id="port_s_name" value="1521">
+                    </td>
+                </tr>
+                <tr id="l_domain_name">
+                    <td>DB DOMAIN</td>
+                    <td>
+                        <input type="text" id="domain_p_name" value="">
+                    </td>
+                    <td>
+                        <input type="text" id="domain_s_name" value="">
+                    </td>
+                </tr>                
+                <tr>
+                    <td>Data file path</td>
+                    <td>
+                        <input type="text" id="df_p_name" value="+DATA">
+                    </td>
+                    <td>
+                        <input type="text" id="df_s_name" value="+DATADG">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Log file path</td>
+                    <td>
+                        <input type="text" id="lf_p_name" value="/u01/prd">
+                    </td>
+                    <td>
+                        <input type="text" id="lf_s_name" value="+FRA">
+                    </td>
+                </tr>
+                <tr id="l_OH_name">
+                    <td>ORACLE_HOME path</td>
+                    <td>
+                        <input type="text" id="oh_p_name" value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6">
+                    </td>
+                    <td>
+                        <input type="text" id="oh_s_name" value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6">
+                    </td>
+                </tr>                
+                <tr>
+                    <td>Operating System</td>
+                    <td>
+                        <input type="text" id="os_p_name" value="Linux">
+                    </td>
+                    <td>
+                        <input type="text" id="os_s_name" value="Linux">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Version</td>
+                    <td>
+                        <!-- <label for="version">Choose a version:</label> -->
+                        <select id="ver_p_name" name="version">
+                          <option id="ver_p_below_11" value="below 11.2.0.4"> below 11.2.0.4 </option>
+                          <option id="ver_p_11" value="11.2.0.4"> 11.2 </option>
+                          <option id="ver_p_1212" value="12.1.0.2"> 12.1 </option>
+                          <option id="ver_p_1221" value="12.2.0.2"> 12.2 </option>
+                          <option id="ver_p_18" value="18.0">18.0</option>
+                          <option id="ver_p_19" value="19.0" selected>19.0 and above</option>
+                        </select>
+                    </td>     
+                    <td>
+                        <select id="ver_s_name" name="version">
+                            <option id="ver_s_below_11" value="below 11.2.0.4"> below 11.2.0.4 </option>
+                            <option id="ver_s_11" value="11.2.0.4"> 11.2 </option>
+                            <option id="ver_s_1212" value="12.1.0.2"> 12.1 </option>
+                            <option id="ver_s_1221" value="12.2.0.2"> 12.2 </option>
+                            <option id="ver_s_18" value="18.0">18.0</option>
+                            <option id="ver_s_19" value="19.0" selected>19.0 and above</option>
+                          </select>
+                    </td>
+                </tr>
+                <tr id="set_until">
+                    <td>Enter set until</td>
+                    <td>
+                        <input type="datetime-local" id="until_time" value="2018-06-12T19:30">
+                        <label for="time">Time</label>
+                    </td>
+                    <td>
+                        <input type="text" id="until_scn" value="123456">
+                        <label for="SCN">SCN</label>
+                    </td>                        
+                    <td>
+                        <input type="text" id="until_log" value="3456">
+                        <label for="log_seq">log sequence</label>
+                    </td>
+                </tr>
+                <tr id="bkp_location">
+                    <td>Are you backups on tape or disk</td>
+                    <td>
+                        <input type="radio" id="disk" name="bkp_location" value="disk">
+                        <label for="bkp_location">disk</label><br>                            
+                    </td>
+                    <td>
+                        <input type="radio" id="tape" name="bkp_location" value="tape">
+                        <label for="tape">Tape</label><br>
+                    </td>
+                </tr>
+                <tr id="catalog">
+                    <td>Are you using catalog?</td>
+                    <td>
+                        <input type="radio" id="catalog_yes" name="catalog" value="catalog">
+                        <label for="catalog">Yes</label><br>      
+                    </td>
+                    <td>
+                        <input type="radio" id="catalog_no" name="catalog" value="nocatalog">
+                        <label for="catalog">No</label><br>      
+                    </td>
+                </tr>
+                <tr id="target">
+                    <td>Can you connect to target?</td>
+                    <td>
+                        <input type="radio" id="target_yes" name="target" value="target">
+                        <label for="target">Yes</label><br>      
+                    </td>
+                    <td>
+                        <input type="radio" id="target_no" name="target" value="notarget">
+                        <label for="target">No</label><br>      
+                    </td>
+                </tr>
+
+           
+                <tr>
+                    <td>
+                        <button type="button" id="gen_instructions" onclick="gen_instruction()">Generate Instructions</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+
+        <div id="active_duplicate_div" class="grid-item">
+           
+            step 1: Create auxiliary pfile<br>
+            <textarea id="pfile" name="message" rows="8" cols="90"></textarea>
+            <br>Step 2: copy the password File<br>
+            <textarea id="pwdfile" name="message" rows="8" cols="90"> </textarea>
+            <br>step 3: Nomount the auxiliary instance using pfile<br>
+            <textarea id="startup_nomount" name="message" rows="8" cols="90"> </textarea>
+            <br>step 4a: Add the below listener entry to listener.ora in auxiliary<br>
+            <textarea id="listener" name="message" rows="15" cols="90"> </textarea>
+            <br>step 4b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
+            <textarea id="tns" name="message" rows="15" cols="90"> </textarea>
+            <br>Step 5: Verify rman connectivity<br>
+            <textarea id="rman_connectivity" name="message" rows="8" cols="90"> </textarea>
+            <br>step 6: Create duplicate cmd File<br>
+            <textarea id="duplicate_cmd" name="message" rows="15" cols="90"> </textarea>
+            <br>step 7: Run duplicate<br>
+            <br>Step 8: Monitor<br>
+
+        </div>  
+        <div id="backup_duplicate_div" class="grid-item">
+            <h1> Coming soon</h1>
+        </div>
+        <div class="grid-item">5</div>
+        <div class="grid-item">6</div>  
+        <div class="grid-item">7</div>
+        <div class="grid-item">8</div>
+        <div class="grid-item">9</div>  
+      </div>
+    <script type="text/javascript" src="script.js"></script>
+</body>
+</html>
