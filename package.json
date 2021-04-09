@@ -1,0 +1,19 @@
+{
+  "name": "rman-duplicate",
+  "version": "1.0.0",
+  "description": "rman duplicate commands",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harsha-nn/rman-duplicate.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/harsha-nn/rman-duplicate/issues"
+  },
+  "homepage": "https://github.com/harsha-nn/rman-duplicate#readme"
+}

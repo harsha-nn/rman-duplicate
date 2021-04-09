@@ -1,4 +1,5 @@
 console.log("I am here on git")
+console.log("live-server installed");
 
 script=["Hi There", "How are you?"]
 
@@ -150,7 +151,7 @@ function verify_rman_connectivity(){
 }
 
 function create_duplicate_cmd(){
-    duplicate_cmd=[`Create a file: rman_activity.cmd and enter the below:\n`]
+    duplicate_cmd=[`Create a file: rman_active_duplicate.cmd and enter the below:\n`]
     duplicate_cmd.push(`rman\n connect target sys/<pwd>@${primary_db_unique_name} \n connect auxiliary sys/<pwd>@${standby_db_unique_name} \n`)
     duplicate_cmd.push(`run { \n`)
     //check if standby or clone
@@ -208,6 +209,16 @@ function create_duplicate_cmd(){
     return duplicate_cmd
 }
 
+function run_active_duplicate(){
+    run_dup=[`Connect to rman\n`]
+    run_dup.push(`rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} log=/tmp/rman_active_duplicate.log\n`)
+    run_dup.push(`RMAN>@rman_active_duplicate.cmd`)
+    return run_dup
+}
+
+function monitor_duplicate(){
+    return `Please monitor the /tmp/<duplicate>.log file to verify successful completion`
+}
 function active_duplicate(){
     //  if( isActiveDuplicate.checked && isDuplicate.checked){
         console.log("Starting instructions for active duplicate")
@@ -219,6 +230,8 @@ function active_duplicate(){
         document.getElementById("startup_nomount").innerHTML=startup_nomount()
         document.getElementById("rman_connectivity").innerHTML=verify_rman_connectivity() 
         document.getElementById("duplicate_cmd").innerHTML=create_duplicate_cmd().join("")
+        document.getElementById("run_active_duplicate").innerHTML=run_active_duplicate().join("")
+        document.getElementById("monitor_active_duplicate").innerHTML=monitor_duplicate()
     //  }
     
 
@@ -250,7 +263,7 @@ standby_lf_path_name.includes(',') ? standby_lf_path_name=standby_lf_path_name.s
 //  primary_OH_name=document.getElementById("oh_p_name").value // ORACLE_HOME
 //  standby_OH_name=document.getElementById("oh_s_name").value // ORACLE_HOME
 
-if(isActiveDuplicate){
+if(isActiveDuplicate.checked){
     active_duplicate()   
 }
     
