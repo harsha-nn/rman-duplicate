@@ -79,7 +79,41 @@
                     <td>
                         <input type="text" id="domain_s_name" value="">
                     </td>
-                </tr>                
+                </tr> 
+           
+                <tr id="is_nofilename">
+                    <td>Is the file structure same on source and target?</td>
+                    <td>
+                        <input type="radio" id="nofilename_yes" name="nofilename" value="nofilenamecheck" checked>
+                        <label for="target">Yes</label><br>      
+                    </td>
+                    <td>
+                        <input type="radio" id="nofilename_no" name="nofilename" value="nofilenamecheck_no">
+                        <label for="target">No</label><br>      
+                    </td>
+                </tr>   
+                <tr id="is_setnewname">
+                    <td>Are all the datafiles in one mount point on target?</td>
+                    <td>
+                        <input type="radio" id="setnewname_yes" name="setnewname" value="setnewname" >
+                        <label for="target">Yes</label><br>      
+                    </td>
+                    <td>
+                        <input type="radio" id="setnewname_no" name="setnewname" value="setnewname_no" checked>
+                        <label for="target">No</label><br>      
+                    </td>
+                </tr> 
+                <tr id="is_omf_stby">
+                    <td>Are you using OMF on target?</td>
+                    <td>
+                        <input type="radio" id="omf_yes" name="omf" value="omf" checked>
+                        <label for="target">Yes</label><br>      
+                    </td>
+                    <td>
+                        <input type="radio" id="omf_no" name="omf" value="omf_no">
+                        <label for="target">No</label><br>      
+                    </td>
+                </tr>                                                                 
                 <tr>
                     <td>Data file path</td>
                     <td>
@@ -155,18 +189,18 @@
                         <label for="log_seq">log sequence</label>
                     </td>
                 </tr>
-                <tr id="bkp_location">
-                    <td>Are you backups on tape or disk</td>
+                <tr id="target">
+                    <td>Can you connect to target?</td>
                     <td>
-                        <input type="radio" id="disk" name="bkp_location" value="disk">
-                        <label for="bkp_location">disk</label><br>                            
+                        <input type="radio" id="target_yes" name="target" value="target">
+                        <label for="target">Yes</label><br>      
                     </td>
                     <td>
-                        <input type="radio" id="tape" name="bkp_location" value="tape">
-                        <label for="tape">Tape</label><br>
+                        <input type="radio" id="target_no" name="target" value="notarget">
+                        <label for="target">No</label><br>      
                     </td>
                 </tr>
-                <tr id="catalog">
+                 <tr id="catalog">
                     <td>Are you using catalog?</td>
                     <td>
                         <input type="radio" id="catalog_yes" name="catalog" value="catalog">
@@ -177,15 +211,16 @@
                         <label for="catalog">No</label><br>      
                     </td>
                 </tr>
-                <tr id="target">
-                    <td>Can you connect to target?</td>
+
+                <tr id="bkp_location">
+                    <td>Are you backups on tape or disk</td>
                     <td>
-                        <input type="radio" id="target_yes" name="target" value="target">
-                        <label for="target">Yes</label><br>      
+                        <input type="radio" id="disk" name="bkp_location" value="disk">
+                        <label for="bkp_location">disk</label><br>                            
                     </td>
                     <td>
-                        <input type="radio" id="target_no" name="target" value="notarget">
-                        <label for="target">No</label><br>      
+                        <input type="radio" id="tape" name="bkp_location" value="tape">
+                        <label for="tape">Tape</label><br>
                     </td>
                 </tr>
 
@@ -222,9 +257,33 @@
 
         </div>  
         <div id="backup_duplicate_div" class="grid-item">
-            <h1> Coming soon</h1>
+            <h1> Backup based duplicate</h1>
+            
+            <div id="using_nocatalog_notarget">
+                using backup location no catalog no target<br>                
+                <br>Step 1: Take backup in primary database<br>
+                <textarea id="bkp_primary_db_ubkploc" name="message" rows="8" cols="90"></textarea>
+                <br>Step 2: Move backup pieces<br>
+                <textarea id="move_backup_ubkploc" name="message" rows="8" cols="90"></textarea>
+                <br>Step 3: Copy password file from primary to aux<br>
+                <textarea id="copy_pwd_file_ubkploc" name="message" rows="8" cols="90"></textarea>
+                <br>Step 4: Create pfile with only db_name parameter<br>
+                <textarea id="create_pfile_ubkploc" name="message" rows="8" cols="90"></textarea>
+                <br>Step 5: Startup Nomount<br>
+                <textarea id="startup_nomount_ubkploc" name="message" rows="8" cols="90"></textarea>
+                <br>Step 6: Create duplicate cmd File<br>
+                <textarea id="duplicate_cmd_ubkploc" name="message" rows="8" cols="90"></textarea>
+                <br>Step 7: Run duplicate<br>
+                <textarea id="run_ubkploc" name="message" rows="15" cols="90"> </textarea>
+                <br>Step 8: Monitor<br>
+                <textarea id="monitor_ubkploc" name="message" rows="15" cols="90"> </textarea>
+            </div>
+            <div id="using_catalog_notarget">using catalog but no target</div>
+            <div id="using_target">using target</div>
         </div>
-        <div class="grid-item">5</div>
+        <div class="grid-item" id="error">
+            <p id="error_text"></p>
+        </div>
         <div class="grid-item">6</div>  
         <div class="grid-item">7</div>
         <div class="grid-item">8</div>
