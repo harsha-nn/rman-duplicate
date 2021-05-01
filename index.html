@@ -21,9 +21,9 @@
             <!-- <input type="radio" id="stby" name="plan" value="standby"> -->
             <label for="standby">standby or clone</label><br>
             <!-- <div id="which_duplicate"> -->
-                <input type="radio" id="standby" name="dup" value="Active">
+                <input type="radio" id="standby" name="dup" value="Active"  onchange="change_db_name(this)">
                 <label for="standby">Create a Standby</label><br>
-                <input type="radio" id="clone" name="dup" value="Backup" checked>
+                <input type="radio" id="clone" name="dup" value="Backup" checked onchange="change_db_name(this)">
                 <label for="standby">Clone a database</label><br>
             <!-- </div> -->
         </div>
@@ -174,29 +174,14 @@
                           </select>
                     </td>
                 </tr>
-                <tr id="set_until">
-                    <td>Enter set until</td>
-                    <td>
-                        <input type="datetime-local" id="until_time" value="2018-06-12T19:30">
-                        <label for="time">Time</label>
-                    </td>
-                    <td>
-                        <input type="text" id="until_scn" value="123456">
-                        <label for="SCN">SCN</label>
-                    </td>                        
-                    <td>
-                        <input type="text" id="until_log" value="3456">
-                        <label for="log_seq">log sequence</label>
-                    </td>
-                </tr>
                 <tr id="target">
                     <td>Can you connect to target?</td>
                     <td>
-                        <input type="radio" id="target_yes" name="target" value="target">
+                        <input type="radio" id="target_yes" name="target" value="target" onchange="isTagetEnabled(this)">
                         <label for="target">Yes</label><br>      
                     </td>
                     <td>
-                        <input type="radio" id="target_no" name="target" value="notarget">
+                        <input type="radio" id="target_no" name="target" value="notarget" checked onchange="isTagetEnabled(this)">
                         <label for="target">No</label><br>      
                     </td>
                 </tr>
@@ -207,7 +192,7 @@
                         <label for="catalog">Yes</label><br>      
                     </td>
                     <td>
-                        <input type="radio" id="catalog_no" name="catalog" value="nocatalog">
+                        <input type="radio" id="catalog_no" name="catalog" value="nocatalog" checked>
                         <label for="catalog">No</label><br>      
                     </td>
                 </tr>
@@ -215,12 +200,34 @@
                 <tr id="bkp_location">
                     <td>Are you backups on tape or disk</td>
                     <td>
-                        <input type="radio" id="disk" name="bkp_location" value="disk">
+                        <input type="radio" id="disk" name="bkp_location" value="disk" checked>
                         <label for="bkp_location">disk</label><br>                            
                     </td>
                     <td>
                         <input type="radio" id="tape" name="bkp_location" value="tape">
                         <label for="tape">Tape</label><br>
+                    </td>
+                </tr>
+                <tr id="set_until">
+                    <td>set until?</td>
+                    <td>
+                        <input type="radio" id="no_set_until" name="set_until" value="no">
+                        <label for="no_set_until">No</label><br>
+                    </td>
+                    <td>
+                        <input type="radio" id="set_until_time" name="set_until" value="Yes" checked>
+                        <input type="datetime-local" id="until_time" value="2018-06-12T19:30">
+                        <label for="time">Time</label>
+                    </td>
+                    <td>
+                        <input type="radio" id="set_until_scn" name="set_until" value="scn">
+                        <input type="text" id="until_scn" value="123456">
+                        <label for="SCN">SCN</label>
+                    </td>                        
+                    <td>
+                        <input type="radio" id="set_until_logseq" name="set_until" value="seq">
+                        <input type="text" id="until_log" value="3456">
+                        <label for="log_seq">log sequence</label>
                     </td>
                 </tr>
 
@@ -278,16 +285,54 @@
                 <br>Step 8: Monitor<br>
                 <textarea id="monitor_ubkploc" name="message" rows="15" cols="90"> </textarea>
             </div>
-            <div id="using_catalog_notarget">using catalog but no target</div>
-            <div id="using_target">using target</div>
+            <div id="using_catalog_notarget">
+                using catalog but no target
+                <br>Step 1: Make sure you have backups on primary<br>
+                <textarea id="bkp_primary_db_ucatnotar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 2: Move backup pieces<br>
+                <textarea id="move_backup_ucatnotar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 3: Startup Nomount<br>
+                <textarea id="startup_nomount_ucatnotar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 4: Create duplicate cmd File<br>
+                <textarea id="duplicate_cmd_ucatnotar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 5: Run duplicate<br>
+                <textarea id="run_ucatnotar" name="message" rows="15" cols="90"> </textarea>
+                <br>Step 6: Monitor<br>
+                <textarea id="monitor_ucatnotar" name="message" rows="15" cols="90"> </textarea>
+            </div>
+            <div id="using_target">
+                using target
+                <br>Step 1: Make sure you have backups on primary<br>
+                <textarea id="bkp_primary_db_usingtar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 2: Move backup pieces<br>
+                <textarea id="move_backup_usingtar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 3: Copy password file from primary to aux<br>
+                <textarea id="copy_pwd_file_usingtar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 4: Create pfile with only db_name parameter<br>
+                <textarea id="create_pfile_usingtar" name="message" rows="8" cols="90"></textarea>
+                <br>step 4a: Add the below listener entry to listener.ora in auxiliary<br>
+                <textarea id="listener_usingtar" name="message" rows="15" cols="90"> </textarea>
+                <br>step 4b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
+                <textarea id="tns_usingtar" name="message" rows="15" cols="90"> </textarea>
+                <br>Step 5: Verify rman connectivity<br>
+                <textarea id="rman_connectivity_usingtar" name="message" rows="8" cols="90"> </textarea>
+                <br>Step 6: Startup Nomount<br>
+                <textarea id="startup_nomount_usingtar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 7: Create duplicate cmd File<br>
+                <textarea id="duplicate_cmd_usingtar" name="message" rows="8" cols="90"></textarea>
+                <br>Step 8: Run duplicate<br>
+                <textarea id="run_usingtar" name="message" rows="15" cols="90"> </textarea>
+                <br>Step 9: Monitor<br>
+                <textarea id="monitor_usingtar" name="message" rows="15" cols="90"> </textarea>
+            </div>
         </div>
         <div class="grid-item" id="error">
             <p id="error_text"></p>
         </div>
-        <div class="grid-item">6</div>  
+        <!-- <div class="grid-item">6</div>  
         <div class="grid-item">7</div>
         <div class="grid-item">8</div>
-        <div class="grid-item">9</div>  
+        <div class="grid-item">9</div>   -->
       </div>
     <script type="text/javascript" src="script.js"></script>
 </body>
