@@ -283,15 +283,15 @@ function active_duplicate(){
     //  if( isActiveDuplicate.checked && isDuplicate.checked){
         console.log("Starting instructions for active duplicate")
         activeDiv.style.display="block"
-        document.getElementById("pfile").innerHTML=create_pfile().join("")
-        document.getElementById("listener").innerHTML=create_listener().join("");
-        document.getElementById("tns").innerHTML=create_tns().join("");
-        document.getElementById("pwdfile").innerHTML=create_pwdfile().join("")
-        document.getElementById("startup_nomount").innerHTML=startup_nomount()
-        document.getElementById("rman_connectivity").innerHTML=verify_rman_connectivity() 
-        document.getElementById("duplicate_cmd").innerHTML=create_duplicate_cmd().join("")
-        document.getElementById("run_active_duplicate").innerHTML=run_active_duplicate().join("")
-        document.getElementById("monitor_active_duplicate").innerHTML=monitor_duplicate()
+        document.getElementById("pfile").value=create_pfile().join("")
+        document.getElementById("listener").value=create_listener().join("");
+        document.getElementById("tns").value=create_tns().join("");
+        document.getElementById("pwdfile").value=create_pwdfile().join("")
+        document.getElementById("startup_nomount").value=startup_nomount()
+        document.getElementById("rman_connectivity").value=verify_rman_connectivity() 
+        document.getElementById("duplicate_cmd").value=create_duplicate_cmd().join("")
+        document.getElementById("run_active_duplicate").value=run_active_duplicate().join("")
+        document.getElementById("monitor_active_duplicate").value=monitor_duplicate()
     //  }    
 }
 function is_until(){
@@ -333,14 +333,15 @@ function create_ubkploc_duplicate() {
 }
 function using_backup_location(){
     console.log("using backup location starting .....");
-    document.getElementById("bkp_primary_db_ubkploc").innerHTML=`RMAN> backup spfile ;\nRMAN> backup database include current controlfile plus archivelog ;\n`
-    document.getElementById("move_backup_ubkploc").innerHTML=`If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.`
-    document.getElementById("copy_pwd_file_ubkploc").innerHTML=create_pwdfile().join("")
-    document.getElementById("create_pfile_ubkploc").innerHTML=`Create pfile only with ${standby_db_name} as parameter`
-    document.getElementById("startup_nomount_ubkploc").innerHTML=`export ORACLE_SID=${standby_db_name}\nsql> startup nomount\nsql>exit`
-    document.getElementById("duplicate_cmd_ubkploc").innerHTML=create_ubkploc_duplicate().join("")
-    document.getElementById("run_ubkploc").innerHTML=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
-    document.getElementById("monitor_ubkploc").innerHTML=monitor_duplicate()
+    document.getElementById("bkp_primary_db_ubkploc").value=`RMAN> backup spfile ;\nRMAN> backup database include current controlfile plus archivelog ;\n`
+    document.getElementById("move_backup_ubkploc").value=`If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.`
+    document.getElementById("copy_pwd_file_ubkploc").value=create_pwdfile().join("")
+    document.getElementById("create_pfile_ubkploc").value=`Create pfile only with ${standby_db_name} as parameter`
+    document.getElementById("startup_nomount_ubkploc").value=`export ORACLE_SID=${standby_db_name}\nsql> startup nomount\nsql>exit`
+    document.getElementById("duplicate_cmd_ubkploc").value=create_ubkploc_duplicate().join("")
+    document.getElementById("run_ubkploc").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
+    document.getElementById("monitor_ubkploc").value=monitor_duplicate()
+    using_nocatalog_notarget.style.display=""
 }
 function create_ucatnotar_duplicate(){
     duplicate_cmd_ucatnotar=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
@@ -372,16 +373,17 @@ function create_ucatnotar_duplicate(){
 
 function targetless_with_catalog(){
     // console.log("Coming soon - Targetless with catalog");
-    document.getElementById("bkp_primary_db_ucatnotar").innerHTML=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
+    document.getElementById("bkp_primary_db_ucatnotar").value=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
     if(disk.checked){
-        document.getElementById("move_backup_ucatnotar").innerHTML=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
+        document.getElementById("move_backup_ucatnotar").value=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
     } else {
-        document.getElementById("move_backup_ucatnotar").innerHTML=`You can skip this step. This is only applicable for disk backups`
+        document.getElementById("move_backup_ucatnotar").value=`You can skip this step. This is only applicable for disk backups`
     }
-    document.getElementById("startup_nomount_ucatnotar").innerHTML=`set the oracle sid: export ORACLE_SID=${standby_db_name}`
-    document.getElementById("duplicate_cmd_ucatnotar").innerHTML=create_ucatnotar_duplicate().join("")
-    document.getElementById("run_ucatnotar").innerHTML=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
-    document.getElementById("monitor_ucatnotar").innerHTML=monitor_duplicate()
+    document.getElementById("startup_nomount_ucatnotar").value=`set the oracle sid: export ORACLE_SID=${standby_db_name}`
+    document.getElementById("duplicate_cmd_ucatnotar").value=create_ucatnotar_duplicate().join("")
+    document.getElementById("run_ucatnotar").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
+    document.getElementById("monitor_ucatnotar").value=monitor_duplicate()
+    using_catalog_notarget.style.display=""
 }
 function create_using_target_bkp_duplicate(){
     duplicate_cmd_usingtar=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
@@ -415,21 +417,22 @@ function create_using_target_bkp_duplicate(){
 }
 
 function using_target_bkp_duplicate(){
-    document.getElementById("bkp_primary_db_usingtar").innerHTML=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
+    document.getElementById("bkp_primary_db_usingtar").value=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
     if(disk.checked){
-        document.getElementById("move_backup_usingtar").innerHTML=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
+        document.getElementById("move_backup_usingtar").value=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
     } else {
-        document.getElementById("move_backup_usingtar").innerHTML=`You can skip this step. This is only applicable for disk backups`
+        document.getElementById("move_backup_usingtar").value=`You can skip this step. This is only applicable for disk backups`
     }
-    document.getElementById("copy_pwd_file_usingtar").innerHTML=create_pwdfile().join("")
-    document.getElementById("create_pfile_usingtar").innerHTML=`Create pfile only with ${standby_db_name} as parameter`
-    document.getElementById("listener_usingtar").innerHTML=create_listener().join("");
-    document.getElementById("tns_usingtar").innerHTML=create_tns().join("");
-    document.getElementById("rman_connectivity_usingtar").innerHTML=verify_rman_connectivity() 
-    document.getElementById("startup_nomount_usingtar").innerHTML=`set the oracle sid: export ORACLE_SID=${standby_db_name}\nSQL> startup nomount\nsql>exit`
-    document.getElementById("duplicate_cmd_usingtar").innerHTML=create_using_target_bkp_duplicate().join("")
-    document.getElementById("run_usingtar").innerHTML=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
-    document.getElementById("monitor_usingtar").innerHTML=monitor_duplicate()
+    document.getElementById("copy_pwd_file_usingtar").value=create_pwdfile().join("")
+    document.getElementById("create_pfile_usingtar").value=`Create pfile only with ${standby_db_name} as parameter`
+    document.getElementById("listener_usingtar").value=create_listener().join("");
+    document.getElementById("tns_usingtar").value=create_tns().join("");
+    document.getElementById("rman_connectivity_usingtar").value=verify_rman_connectivity() 
+    document.getElementById("startup_nomount_usingtar").value=`set the oracle sid: export ORACLE_SID=${standby_db_name}\nSQL> startup nomount\nsql>exit`
+    document.getElementById("duplicate_cmd_usingtar").value=create_using_target_bkp_duplicate().join("")
+    document.getElementById("run_usingtar").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
+    document.getElementById("monitor_usingtar").value=monitor_duplicate()
+    using_target.style.display=""
 }
 
 function backup_duplicate(){        
@@ -437,7 +440,7 @@ function backup_duplicate(){
     if(target_no.checked && catalog_no.checked && tape.checked){
         // console.log("You cannot use backup based duplicate")
         // console.log(error_text);
-        error_text.innerHTML="You cannot use backup based duplicate";
+        error_text.value="You cannot use backup based duplicate";
         bkpDiv.style.display="none"
         error_text.style.display=""
     }
