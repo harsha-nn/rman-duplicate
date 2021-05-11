@@ -32,8 +32,8 @@
             <table style="width:100%">
                 <tr>
                   <th>Property</th>
-                  <th>Source</th>
-                  <th>Destination</th>
+                  <th>Source(target)</th>
+                  <th>Destination(auxiliary)</th>
                 </tr>
                 <tr>
                     <td>DB_NAME</td>
@@ -84,16 +84,16 @@
                 <tr id="is_nofilename">
                     <td>Is the file structure same on source and target?</td>
                     <td>
-                        <input type="radio" id="nofilename_yes" name="nofilename" value="nofilenamecheck" checked>
+                        <input type="radio" id="nofilename_yes" name="nofilename" value="nofilenamecheck" checked onchange="nofilenamecheck(this)">
                         <label for="target">Yes</label><br>      
                     </td>
                     <td>
-                        <input type="radio" id="nofilename_no" name="nofilename" value="nofilenamecheck_no">
+                        <input type="radio" id="nofilename_no" name="nofilename" value="nofilenamecheck_no"  onchange="nofilenamecheck(this)">
                         <label for="target">No</label><br>      
                     </td>
                 </tr>   
                 <tr id="is_setnewname">
-                    <td>Are all the datafiles in one mount point on target?</td>
+                    <td>Are all the datafiles in one mount point on destination?</td>
                     <td>
                         <input type="radio" id="setnewname_yes" name="setnewname" value="setnewname" >
                         <label for="target">Yes</label><br>      
@@ -104,7 +104,7 @@
                     </td>
                 </tr> 
                 <tr id="is_omf_stby">
-                    <td>Are you using OMF on target?</td>
+                    <td>Are you using OMF on destination?</td>
                     <td>
                         <input type="radio" id="omf_yes" name="omf" value="omf" checked>
                         <label for="target">Yes</label><br>      
@@ -141,7 +141,7 @@
                         <input type="text" id="oh_s_name" value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6">
                     </td>
                 </tr>                
-                <tr>
+                <!-- <tr>
                     <td>Operating System</td>
                     <td>
                         <input type="text" id="os_p_name" value="Linux">
@@ -153,7 +153,6 @@
                 <tr>
                     <td>Version</td>
                     <td>
-                        <!-- <label for="version">Choose a version:</label> -->
                         <select id="ver_p_name" name="version">
                           <option id="ver_p_below_11" value="below 11.2.0.4"> below 11.2.0.4 </option>
                           <option id="ver_p_11" value="11.2.0.4"> 11.2 </option>
@@ -173,15 +172,15 @@
                             <option id="ver_s_19" value="19.0" selected>19.0 and above</option>
                           </select>
                     </td>
-                </tr>
+                </tr> -->
                 <tr id="target">
                     <td>Can you connect to target?</td>
                     <td>
-                        <input type="radio" id="target_yes" name="target" value="target" onchange="isTagetEnabled(this)">
+                        <input type="radio" id="target_yes" name="target" value="target" onchange="isTargetEnabled(this)">
                         <label for="target">Yes</label><br>      
                     </td>
                     <td>
-                        <input type="radio" id="target_no" name="target" value="notarget" checked onchange="isTagetEnabled(this)">
+                        <input type="radio" id="target_no" name="target" value="notarget" checked onchange="isTargetEnabled(this)">
                         <label for="target">No</label><br>      
                     </td>
                 </tr>
@@ -325,9 +324,46 @@
                 <br>Step 9: Monitor<br>
                 <textarea id="monitor_usingtar" name="message" rows="15" cols="90"> </textarea>
             </div>
+            <div id="create_standby_using_bkp">
+                create standby using bkp
+                <br>Step 1: Make sure you have backups on primary<br>
+                <textarea id="bkp_primary_stby" name="message" rows="8" cols="90"></textarea>
+                <!-- <p id="bkp_primary_stby"></p> -->
+                <br>Step 2: Move backup pieces<br>
+                <textarea id="move_backup_stby" name="message" rows="8" cols="90"></textarea>
+                <!-- <p id="move_backup_stby"></p> -->
+                <br>Step 3: Copy password file from primary to aux<br>
+                <textarea id="copy_pwd_file_stby" name="message" rows="8" cols="90"></textarea>
+                <!-- <p id="copy_pwd_file_stby"></p> -->
+                <br>Step 4: Create pfile with only db_name parameter<br>
+                <textarea id="create_pfile_stby" name="message" rows="8" cols="90"></textarea>
+                <!-- <p id="create_pfile_stby"></p> -->
+                <br>step 4a: Add the below listener entry to listener.ora in auxiliary<br>
+                <textarea id="listener_stby" name="message" rows="15" cols="90"> </textarea>
+                <!-- <p id="listener_stby"></p> -->
+                <br>step 4b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
+                <textarea id="tns_stby" name="message" rows="15" cols="90"> </textarea>
+                <!-- <p id="tns_stby"></p> -->
+                <br>Step 5: Verify rman connectivity<br>
+                <textarea id="rman_connectivity_stby" name="message" rows="8" cols="90"> </textarea>
+                <!-- <p id="rman_connectivity_stby"></p> -->
+                <br>Step 6: Startup Nomount<br>
+                <textarea id="startup_nomount_stby" name="message" rows="8" cols="90"></textarea>
+                <!-- <p id="startup_nomount_stby"></p> -->
+                <br>Step 7: Create duplicate cmd File<br>
+                <textarea id="duplicate_cmd_stby" name="message" rows="8" cols="90"></textarea>
+                <!-- <p id="duplicate_cmd_stby"></p> -->
+                <br>Step 8: Run duplicate<br>
+                <textarea id="run_stby" name="message" rows="15" cols="90"> </textarea>
+                <!-- <p id="run_stby"></p> -->
+                <br>Step 9: Monitor<br>
+                <textarea id="monitor_stby" name="message" rows="15" cols="90"> </textarea>
+                <!-- <p id="monitor_stby"></p> -->
+            </div>
         </div>
         <div class="grid-item" id="error">
-            <p id="error_text"></p>
+            <textarea id="error_text" rows="15" cols="90"></textarea>
+            <!-- <p id="error_text"></p> -->
         </div>
         <!-- <div class="grid-item">6</div>  
         <div class="grid-item">7</div>

@@ -23,6 +23,7 @@ var nofilename=document.getElementById("is_nofilename")
 var setnewname=document.getElementById("is_setnewname")
 var omf_stby=document.getElementById("is_omf_stby")
 var error_text=document.getElementById("error_text")
+var create_standby_using_bkp=document.getElementById("create_standby_using_bkp")
 
 
 
@@ -43,8 +44,8 @@ var primary_OH_name=document.getElementById("oh_p_name").value // ORACLE_HOME
 var standby_OH_name=document.getElementById("oh_s_name").value // ORACLE_HOME
 var primary_version_options=document.getElementById("ver_p_name")
 var standby_version_options=document.getElementById("ver_s_name")
-var primary_version=primary_version_options.options[primary_version_options.selectedIndex].value
-var standby_version=standby_version_options.options[standby_version_options.selectedIndex].value
+// var primary_version=primary_version_options.options[primary_version_options.selectedIndex].value
+// var standby_version=standby_version_options.options[standby_version_options.selectedIndex].value
 var disk=document.getElementById("disk")
 var tape=document.getElementById("tape")
 var catalog_yes=document.getElementById("catalog_yes")
@@ -64,6 +65,9 @@ var set_until_logseq=document.getElementById("set_until_logseq")
 var until_time=document.getElementById("until_time").value
 var until_scn=document.getElementById("until_scn").value
 var until_log=document.getElementById("until_log").value
+//setting this to ensure initial selection works
+document.getElementById("db_s_name").value=`boston`
+
 
 // console.log(error_text);
 //controls the visibility of bkp_based_duplicate html elements
@@ -74,7 +78,9 @@ function toggle_bkp_elements(toggle){
     target.style.display=toggle;
     nofilename.style.display=toggle;
     setnewname.style.display=toggle;
-    omf_stby.style.display=toggle;
+    // omf_stby.style.display=toggle;
+    document.getElementById("is_setnewname").style.display="none"
+    // 
 }
 
 function toggle_active_elements(toggle){
@@ -83,6 +89,7 @@ function toggle_active_elements(toggle){
     document.getElementById("l_port_name").style.display=toggle;
     document.getElementById("l_OH_name").style.display=toggle;
     document.getElementById("l_domain_name").style.display=toggle; 
+    // omf_stby.style.display=toggle;
 }
 
 //Block on first run
@@ -99,20 +106,12 @@ isBackupDuplicate.addEventListener("click",function(){
     if (isBackupDuplicate.checked ){
         toggle_active_elements("none")        
         toggle_bkp_elements("")
+        document.getElementById("is_omf_stby").style.display="none"
     }
 })
-//Check if target is selected and show tns html 
-function isTagetEnabled(radio){
-    if(radio.value=="target"){
-        toggle_active_elements("") 
-    }else{
-        toggle_active_elements("none")
-    }
-}
 
 //Check if active duplicate is checked and show html accordingly
-isActiveDuplicate.addEventListener("click",function(){
-    
+isActiveDuplicate.addEventListener("click",function(){    
     if (isActiveDuplicate.checked ){
         // document.getElementById("l_db_u_name").style.display="block";
         if(isStandby.checked){
@@ -125,18 +124,50 @@ isActiveDuplicate.addEventListener("click",function(){
         document.getElementById("l_port_name").style.display="";
         document.getElementById("l_OH_name").style.display="";
         document.getElementById("l_domain_name").style.display="";    
+        omf_stby.style.display=""
         toggle_bkp_elements("none")
     }
 })
+//Check if target is selected and show tns html 
+function isTargetEnabled(radio){
+    if(radio.value=="target"){
+        toggle_active_elements("") 
+    }else{
+        toggle_active_elements("none")
+    }
+}
 
+//Change standby db name to match primary if standby is selected
 function change_db_name(radio){
     if(radio.value=="Active"){
         document.getElementById("db_s_name").value=`chicago`
+        if(isBackupDuplicate.checked){
+            toggle_active_elements("") 
+            target_yes.checked = true;
+        }
     } else {
         document.getElementById("db_s_name").value=`boston`
+        if(isBackupDuplicate.checked){
+            toggle_active_elements("none") 
+        }        
     }
-
 }
+
+//if nofilename is selected hide the next two questions
+function nofilenamecheck(radio){
+    
+    if(radio.value=="nofilenamecheck_no"){
+        console.log("in no file name check");
+        document.getElementById("is_setnewname").style.display=""
+        document.getElementById("is_omf_stby").style.display=""
+    } else {
+        document.getElementById("is_setnewname").style.display="none"
+        document.getElementById("is_omf_stby").style.display="none"
+    }
+}
+
+
+
 isStandby.addEventListener("click",function(){
     standby_db_name=primary_db_name;
 })
@@ -187,7 +218,16 @@ function create_pfile(){
     pfile_text.push(`DB_NAME=${standby_db_name}`)
     return pfile_text
 }
-
+function create_omf_pfile(){
+    pfile_text=[]
+    pfile_text.push(`Create pfile with the below parameters:\n`)
+    pfile_text.push(`init${standby_db_unique_name}.ora\n`)
+    pfile_text.push(`------------------------------------\n`)
+    pfile_text.push(`DB_NAME=${standby_db_name}\n`)
+    pfile_text.push(`db_create_file_dest=${standby_df_path_name}\n`)
+    pfile_text.push(`DB_CREATE_ONLINE_LOG_DEST=${standby_lf_path_name}`)
+    return pfile_text
+}
 function create_pwdfile(){
     pwd_file=[]
     pwd_file.push(`On the source database check if password file exists:\n`)
@@ -209,6 +249,7 @@ function verify_rman_connectivity(){
 function convert_parameters(){
         // check if path variables are arrays
     // check if they are same length
+    console.log("Running convert");
     let convert_array=[]
     if(Array.isArray(primary_df_path_name)){        
         if (!Array.isArray(standby_df_path_name)){
@@ -262,8 +303,11 @@ function create_duplicate_cmd(){
     // if(primary_version === "12.1.0.2" || primary_version==="12.2.0.2" || primary_version==="18.0" || primary_version==="19.0"){
     //     duplicate_cmd.push(`USING BACKUPSET <refer doc# 1987193.1 to know more about this option. You can skip this line too> \n`)
     // }
-    duplicate_cmd.push(`SPFILE\n`)
-    duplicate_cmd.push(convert_parameters())
+    
+    if(omf_no.checked){
+        duplicate_cmd.push(`SPFILE\n`)
+        duplicate_cmd.push(convert_parameters())
+    }    
     duplicate_cmd.push(`}`)
     return duplicate_cmd
 }
@@ -283,7 +327,11 @@ function active_duplicate(){
     //  if( isActiveDuplicate.checked && isDuplicate.checked){
         console.log("Starting instructions for active duplicate")
         activeDiv.style.display="block"
-        document.getElementById("pfile").value=create_pfile().join("")
+        if(omf_yes.checked){
+            document.getElementById("pfile").value=create_omf_pfile().join("")    
+        } else{
+            document.getElementById("pfile").value=create_pfile().join("")
+        }        
         document.getElementById("listener").value=create_listener().join("");
         document.getElementById("tns").value=create_tns().join("");
         document.getElementById("pwdfile").value=create_pwdfile().join("")
@@ -292,6 +340,11 @@ function active_duplicate(){
         document.getElementById("duplicate_cmd").value=create_duplicate_cmd().join("")
         document.getElementById("run_active_duplicate").value=run_active_duplicate().join("")
         document.getElementById("monitor_active_duplicate").value=monitor_duplicate()
+        bkpDiv.style.display="none"
+        // using_nocatalog_notarget.style.display="none"
+        // using_catalog_notarget.style.display="none"
+        // error_text.style.display="none"
+        // create_standby_using_bkp_func.style.display="none"
     //  }    
 }
 function is_until(){
@@ -325,18 +378,32 @@ function create_ubkploc_duplicate() {
         duplicate_cmd_ubkploc.push(`}\n`)
         return duplicate_cmd_ubkploc;
     }
-    duplicate_cmd_ubkploc.push(`SET CONTROL_FILES='<give the path where you want control files to get created>'\n`)
-    duplicate_cmd_ubkploc.push(convert_parameters())
+    if(omf_no.checked && setnewname_no.checked && nofilename_no.checked){
+        duplicate_cmd_ubkploc.push(`SET CONTROL_FILES='<give the path where you want control files to get created>'\n`)
+        // console.log("Calling convert");
+        duplicate_cmd_ubkploc.push(convert_parameters())
+    }
+    if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
+        console.log("WIP");
+        duplicate_cmd_ubkploc.push(`set newname for database to ${standby_df_path_name}/%U\n`)
+    }
     duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`)
     duplicate_cmd_ubkploc.push(`}\n`)    
     return duplicate_cmd_ubkploc
 }
 function using_backup_location(){
+    if (set_until_logseq.checked || set_until_scn.checked){
+        show_error_meesage("You can select only until time when using backup location")
+    }
     console.log("using backup location starting .....");
     document.getElementById("bkp_primary_db_ubkploc").value=`RMAN> backup spfile ;\nRMAN> backup database include current controlfile plus archivelog ;\n`
     document.getElementById("move_backup_ubkploc").value=`If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.`
     document.getElementById("copy_pwd_file_ubkploc").value=create_pwdfile().join("")
-    document.getElementById("create_pfile_ubkploc").value=`Create pfile only with ${standby_db_name} as parameter`
+    if(omf_yes.checked){
+        document.getElementById("create_pfile_ubkploc").value=create_omf_pfile().join("")
+    }else{
+        document.getElementById("create_pfile_ubkploc").value=`Create pfile only with ${standby_db_name} as parameter`
+    }
     document.getElementById("startup_nomount_ubkploc").value=`export ORACLE_SID=${standby_db_name}\nsql> startup nomount\nsql>exit`
     document.getElementById("duplicate_cmd_ubkploc").value=create_ubkploc_duplicate().join("")
     document.getElementById("run_ubkploc").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
@@ -362,13 +429,14 @@ function create_ucatnotar_duplicate(){
         duplicate_cmd_ucatnotar.push(`}\n`)
         return duplicate_cmd_ucatnotar;
     }
-    if(setnewname_yes.checked){
-        duplicate_cmd_ucatnotar.push(`set new name ${standby_df_path_name}\n`)
+    if(setnewname_yes.checked && nofilename_no.checked && omf_no.checked){
+        duplicate_cmd_ucatnotar.push(`set newname for database to '${standby_df_path_name}/%U'\n`)
         duplicate_cmd_ucatnotar.push(`}\n`)
         return duplicate_cmd_ucatnotar;
     }
     duplicate_cmd_ucatnotar.push(convert_parameters())
     duplicate_cmd_ucatnotar.push(`\n}`)
+    return duplicate_cmd_ucatnotar
 }
 
 function targetless_with_catalog(){
@@ -392,13 +460,13 @@ function create_using_target_bkp_duplicate(){
     }else {
         duplicate_cmd_usingtar.push(`rman target sys/<pwd>@<target> auxiliary /\n`)
     }
-    duplicate_cmd_usingtar.push(`run {\n`)
-    if(disk.checked){
-        duplicate_cmd_usingtar.push(`allocate auxiliary channel ch1 type disk;\n`)
-    }else{
+    duplicate_cmd_usingtar.push(`run {\n`)    
+    if(disk.checked){        
+        duplicate_cmd_usingtar.push(`allocate auxiliary channel ch2 type disk;\n`)
+    }else{        
         duplicate_cmd_usingtar.push(`allocate auxiliary channel sb1 type sbt params <provide tape parameters>\n`)
     }
-    duplicate_cmd_usingtar.push(`// you can allocate multiple channles <please remove this line>\n`)
+    duplicate_cmd_usingtar.push(`// you can allocate multiple auxiliary channels <please remove this line>\n`)
     duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
     duplicate_cmd_usingtar.push(is_until())
     duplicate_cmd_usingtar.push(`\nSPFILE\n`)
@@ -407,13 +475,16 @@ function create_using_target_bkp_duplicate(){
         duplicate_cmd_usingtar.push(`}\n`)
         return duplicate_cmd_usingtar;
     }
-    if(setnewname_yes.checked){
-        duplicate_cmd_usingtar.push(`set new name ${standby_df_path_name}\n`)
+    if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
+        duplicate_cmd_usingtar.push(`set newname for database to '${standby_df_path_name}/%U'\n`)
         duplicate_cmd_usingtar.push(`}\n`)
         return duplicate_cmd_usingtar;
     }
-    duplicate_cmd_usingtar.push(convert_parameters())
+    if(omf_no.checked && nofilename_no.checked &&setnewname_no.checked){
+        duplicate_cmd_usingtar.push(convert_parameters())
+    }
     duplicate_cmd_usingtar.push(`\n}`)
+    return duplicate_cmd_usingtar
 }
 
 function using_target_bkp_duplicate(){
@@ -424,7 +495,12 @@ function using_target_bkp_duplicate(){
         document.getElementById("move_backup_usingtar").value=`You can skip this step. This is only applicable for disk backups`
     }
     document.getElementById("copy_pwd_file_usingtar").value=create_pwdfile().join("")
-    document.getElementById("create_pfile_usingtar").value=`Create pfile only with ${standby_db_name} as parameter`
+    if(omf_yes.checked){
+        document.getElementById("create_pfile_usingtar").value=create_omf_pfile().join("")
+    } else{
+        document.getElementById("create_pfile_usingtar").value=`Create pfile only with ${standby_db_name} as parameter`
+    }
+    
     document.getElementById("listener_usingtar").value=create_listener().join("");
     document.getElementById("tns_usingtar").value=create_tns().join("");
     document.getElementById("rman_connectivity_usingtar").value=verify_rman_connectivity() 
@@ -434,21 +510,82 @@ function using_target_bkp_duplicate(){
     document.getElementById("monitor_usingtar").value=monitor_duplicate()
     using_target.style.display=""
 }
+function create_stby_using_bkp_duplicate(){
+    duplicate_cmd_usingstby=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
+    if(catalog_yes.checked){
+        duplicate_cmd_usingstby.push(`rman target sys/<pwd>@<target> catalog <catalog schema>/<password>@<catalog service> auxiliary /\n`)
+    }else {
+        duplicate_cmd_usingstby.push(`rman target sys/<pwd>@<target> auxiliary /\n`)
+    }
+    duplicate_cmd_usingstby.push(`run {\n`)
+    duplicate_cmd_usingtar.push(`allocate channel ch1 type disk;\n`)
+    if(disk.checked){
+        duplicate_cmd_usingstby.push(`allocate auxiliary channel ch1 type disk;\n`)
+    }else{
+        duplicate_cmd_usingstby.push(`allocate auxiliary channel sb1 type sbt params <provide tape parameters>\n`)
+    }
+    duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
+    duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
+    duplicate_cmd_usingstby.push(is_until())
+    duplicate_cmd_usingstby.push(`\nSPFILE\n`)
+    if(nofilename_yes.checked){
+        duplicate_cmd_usingstby.push('NOFILENAMECHECK;\n')
+        duplicate_cmd_usingstby.push(`}\n`)
+        return duplicate_cmd_usingstby;
+    }
+    if(setnewname_yes.checked){
+        duplicate_cmd_usingstby.push(`set new name ${standby_df_path_name}\n`)
+        duplicate_cmd_usingstby.push(`}\n`)
+        return duplicate_cmd_usingstby;
+    }
+    duplicate_cmd_usingstby.push(convert_parameters())
+    duplicate_cmd_usingstby.push(`\n}`)
+}
+function create_standby_using_bkp_func(){
+    console.log("Creating standby");
+    document.getElementById("bkp_primary_stby").value=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
+    if(disk.checked){
+        document.getElementById("move_backup_stby").value=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
+    } else {
+        document.getElementById("move_backup_stby").value=`You can skip this step. This is only applicable for disk backups`
+    }
+    document.getElementById("copy_pwd_file_stby").value=create_pwdfile().join("")
+    if(omf_yes.checked){
+        document.getElementById("create_pfile_stby").value=create_omf_pfile().join("")
+    }else{
+        document.getElementById("create_pfile_stby").value=`Create pfile only with ${standby_db_name} as parameter`
+    }
+    
+    document.getElementById("listener_stby").value=create_listener().join("");
+    document.getElementById("tns_stby").value=create_tns().join("");
+    document.getElementById("rman_connectivity_stby").value=verify_rman_connectivity() 
+    document.getElementById("startup_nomount_stby").value=`set the oracle sid: export ORACLE_SID=${standby_db_name}\nSQL> startup nomount\nsql>exit`
+    document.getElementById("duplicate_cmd_stby").value=create_stby_using_bkp_duplicate().join("")
+    document.getElementById("run_stby").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
+    document.getElementById("monitor_stby").value=monitor_duplicate()
+    create_standby_using_bkp.style.display=""
+}
 
+function show_error_meesage(msg){
+    alert(msg);
+    error_text.value=msg;
+    bkpDiv.style.display="none"
+    error_text.style.display=""
+}
 function backup_duplicate(){        
     //Throw error is no catalog/target/tape
     if(target_no.checked && catalog_no.checked && tape.checked){
         // console.log("You cannot use backup based duplicate")
         // console.log(error_text);
-        error_text.value="You cannot use backup based duplicate";
-        bkpDiv.style.display="none"
-        error_text.style.display=""
+        show_error_meesage("You cannot use backup based duplicate")
+       
     }
     //if no target no catalog//call using_bkp_location
     if(target_no.checked && catalog_no.checked && disk.checked){
         using_catalog_notarget.style.display="none"
         using_target.style.display="none"
         error_text.style.display="none"
+        create_standby_using_bkp.style.display="none"
         using_backup_location()    
     }
     //if not target but catalog -- check tape or disk in allocate channel -- call notargetwithcatalog
@@ -456,6 +593,7 @@ function backup_duplicate(){
         using_target.style.display="none"
         using_nocatalog_notarget.style.display="none"
         error_text.style.display="none"
+        create_standby_using_bkp.style.display="none"
         targetless_with_catalog()
     }
     //if target -- check tape or disk in allocate channel -- create sqlnet -- call target_based_backup
@@ -464,8 +602,17 @@ function backup_duplicate(){
         using_nocatalog_notarget.style.display="none"
         using_catalog_notarget.style.display="none"
         error_text.style.display="none"
+        create_standby_using_bkp.style.display="none"
         using_target_bkp_duplicate()
     }
+    if(isBackupDuplicate.checked && isStandby.checked){
+        using_nocatalog_notarget.style.display="none"
+        using_catalog_notarget.style.display="none"
+        error_text.style.display="none"
+        using_target.style.display="none"
+        create_standby_using_bkp_func()
+    }
+
 }
 
 function gen_instruction(){
@@ -481,8 +628,8 @@ function gen_instruction(){
  standby_df_path_name=document.getElementById("df_s_name").value
  primary_lf_path_name=document.getElementById("lf_p_name").value 
  standby_lf_path_name=document.getElementById("lf_s_name").value
- primary_version=primary_version_options.options[primary_version_options.selectedIndex].value
- standby_version=standby_version_options.options[standby_version_options.selectedIndex].value
+//  primary_version=primary_version_options.options[primary_version_options.selectedIndex].value
+//  standby_version=standby_version_options.options[standby_version_options.selectedIndex].value
 //  console.log(primary_version);
 //  isCloneDB=document.getElementById("clone")
 //  isStandby=document.getElementById("standby")
