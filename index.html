@@ -106,16 +106,16 @@
                 <tr id="is_omf_stby">
                     <td>Are you using OMF on destination?</td>
                     <td>
-                        <input type="radio" id="omf_yes" name="omf" value="omf" checked>
+                        <input type="radio" id="omf_yes" name="omf" value="omf" >
                         <label for="target">Yes</label><br>      
                     </td>
                     <td>
-                        <input type="radio" id="omf_no" name="omf" value="omf_no">
+                        <input type="radio" id="omf_no" name="omf" value="omf_no" checked>
                         <label for="target">No</label><br>      
                     </td>
                 </tr>                                                                 
                 <tr>
-                    <td>Data file path</td>
+                    <td>Data file path(For multiple separate by comma)</td>
                     <td>
                         <input type="text" id="df_p_name" value="+DATA">
                     </td>
@@ -124,7 +124,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Log file path</td>
+                    <td>Log file path(For multiple separate by comma)</td>
                     <td>
                         <input type="text" id="lf_p_name" value="/u01/prd">
                     </td>
@@ -132,6 +132,13 @@
                         <input type="text" id="lf_s_name" value="+FRA">
                     </td>
                 </tr>
+                <tr>
+                    <td>Control file location on destination(For multiple separate by comma)</td>
+                    <td>
+                        <input type="text" id="cf_s_name" value="/usr/data/control01.ctl">
+                    </td>
+                </tr>
+                
                 <tr id="l_OH_name">
                     <td>ORACLE_HOME path</td>
                     <td>
@@ -271,17 +278,17 @@
                 <textarea id="bkp_primary_db_ubkploc" name="message" rows="8" cols="90"></textarea>
                 <br>Step 2: Move backup pieces<br>
                 <textarea id="move_backup_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 3: Copy password file from primary to aux<br>
-                <textarea id="copy_pwd_file_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 4: Create pfile with only db_name parameter<br>
+                <!-- <br>Step 3: Copy password file from primary to aux<br>
+                <textarea id="copy_pwd_file_ubkploc" name="message" rows="8" cols="90"></textarea> -->
+                <br>Step 3: Create pfile with only db_name parameter<br>
                 <textarea id="create_pfile_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 5: Startup Nomount<br>
+                <br>Step 4: Startup Nomount<br>
                 <textarea id="startup_nomount_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 6: Create duplicate cmd File<br>
+                <br>Step 5: Create duplicate cmd File<br>
                 <textarea id="duplicate_cmd_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 7: Run duplicate<br>
+                <br>Step 6: Run duplicate<br>
                 <textarea id="run_ubkploc" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 8: Monitor<br>
+                <br>Step 7: Monitor<br>
                 <textarea id="monitor_ubkploc" name="message" rows="15" cols="90"> </textarea>
             </div>
             <div id="using_catalog_notarget">

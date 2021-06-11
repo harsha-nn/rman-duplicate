@@ -40,6 +40,7 @@ var primary_df_path_name=document.getElementById("df_p_name").value //data file 
 var standby_df_path_name=document.getElementById("df_s_name").value
 var primary_lf_path_name=document.getElementById("lf_p_name").value //log file path
 var standby_lf_path_name=document.getElementById("lf_s_name").value
+var standby_cf_path_name=document.getElementById("cf_s_name").value
 var primary_OH_name=document.getElementById("oh_p_name").value // ORACLE_HOME
 var standby_OH_name=document.getElementById("oh_s_name").value // ORACLE_HOME
 var primary_version_options=document.getElementById("ver_p_name")
@@ -154,8 +155,7 @@ function change_db_name(radio){
 }
 
 //if nofilename is selected hide the next two questions
-function nofilenamecheck(radio){
-    
+function nofilenamecheck(radio){    
     if(radio.value=="nofilenamecheck_no"){
         console.log("in no file name check");
         document.getElementById("is_setnewname").style.display=""
@@ -191,20 +191,26 @@ function create_tns(){
     tns=[]
     tns.push(`${standby_db_unique_name} =`)
     tns.push(`\n  (DESCRIPTION = `)
-    tns.push(`\n    ((ADDRESS = (PROTOCOL = TCP)(HOST = ${standby_host_name})(PORT = ${standby_port_number})) `)
+    tns.push(`\n    (ADDRESS_LIST=`)
+    tns.push(`\n        (ADDRESS = (PROTOCOL = TCP)(HOST = ${standby_host_name})(PORT = ${standby_port_number})) `)
+    tns.push(`\n     )`)
     tns.push(`\n    (CONNECT_DATA =`)
     tns.push(`\n      (SERVER = DEDICATED)`)
-    tns.push(`\n      (SERVICE_NAME = ${standby_db_unique_name})`)
+    // tns.push(`\n      (SERVICE_NAME = ${standby_db_unique_name})`)
+    tns.push(`\n      (SID = ${standby_db_unique_name})`)
     tns.push(`\n    )`)
     tns.push(`\n  )`)
 
     tns.push(`\n\n`)
     tns.push(`${primary_db_unique_name} =`)
     tns.push(`\n  (DESCRIPTION = `)
-    tns.push(`\n    ((ADDRESS = (PROTOCOL = TCP)(HOST = ${primary_host_name})(PORT = ${primary_port_number})) `)
+    tns.push(`\n    (ADDRESS_LIST=`)
+    tns.push(`\n         (ADDRESS = (PROTOCOL = TCP)(HOST = ${primary_host_name})(PORT = ${primary_port_number})) `)
+    tns.push(`\n     )`)
     tns.push(`\n    (CONNECT_DATA =`)
     tns.push(`\n      (SERVER = DEDICATED)`)
-    tns.push(`\n      (SERVICE_NAME = ${primary_db_unique_name})`)
+    // tns.push(`\n      (SERVICE_NAME = ${primary_db_unique_name})`)
+    tns.push(`\n      (SID = ${primary_db_unique_name})`)
     tns.push(`\n    )`)
     tns.push(`\n  )`)
     return tns
@@ -212,10 +218,18 @@ function create_tns(){
 
 function create_pfile(){
     pfile_text=[]
-    pfile_text.push(`Create pfile with the below parameters:\n`)
-    pfile_text.push(`init${standby_db_unique_name}.ora\n`)
-    pfile_text.push(`------------------------------------\n`)
-    pfile_text.push(`DB_NAME=${standby_db_name}`)
+    if(standby_db_unique_name === standby_db_name){
+        pfile_text.push(`Create pfile with the below parameters:\n`)
+        pfile_text.push(`init${standby_db_unique_name}.ora\n`)
+        pfile_text.push(`------------------------------------\n`)
+        pfile_text.push(`DB_NAME=${standby_db_name}`)
+    } else{
+        pfile_text.push(`Create pfile with the below parameters:\n`)
+        pfile_text.push(`init${standby_db_unique_name}.ora\n`)
+        pfile_text.push(`------------------------------------\n`)
+        pfile_text.push(`DB_NAME=${standby_db_name}\n`)
+        pfile_text.push(`DB_UNIQUE_NAME=${standby_db_unique_name}\n`)
+    }
     return pfile_text
 }
 function create_omf_pfile(){
@@ -232,9 +246,16 @@ function create_pwdfile(){
     pwd_file=[]
     pwd_file.push(`On the source database check if password file exists:\n`)
     pwd_file.push(`ls -ltr *pw*${primary_db_unique_name}*\n`)
-    pwd_file.push( `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`)
-    pwd_file.push(`If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_unique_name}.ora PASSWORD=<password>\n`)
-    pwd_file.push(`copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`)
+    if(standby_db_name === standby_db_unique_name){
+        pwd_file.push( `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`)
+        pwd_file.push(`If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_unique_name}.ora PASSWORD=<password>\n`)
+        pwd_file.push(`copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`)
+    } else {
+        pwd_file.push( `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_name}.ora\n`)
+        pwd_file.push(`If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_name}.ora PASSWORD=<password>\n`)
+        pwd_file.push(`copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_name}.ora\n`)
+    }
+
     return pwd_file
 }
 
@@ -288,6 +309,24 @@ function convert_parameters(){
     }
     return convert_array
 }
+
+function get_controlfile(){
+    console.log("Getting control file")
+    let control_array=[]
+    if(Array.isArray(standby_cf_path_name)){        
+            // standby_cf_path_name=standby_cf_path_name.split()
+        console.log(standby_cf_path_name);
+        // tempArray=[]
+        // for(i=0;i<standby_cf_path_name.length;i++){            
+        //         tempArray.push(`"${standby_cf_path_name[i]}"\n `)  
+        //         console.log(tempArray[i])                          
+        // }
+        control_array.push(`SET CONTROL_FILES='${standby_cf_path_name.join('\',\'')}'\n`)
+    }else{
+        control_array.push(`SET CONTROL_FILES='${standby_cf_path_name}'\n `)
+    }
+    return control_array
+}
 function create_duplicate_cmd(){
     duplicate_cmd=[`Create a file: rman_active_duplicate.cmd and enter the below:\n`]
     duplicate_cmd.push(`rman\n connect target sys/<pwd>@${primary_db_unique_name} \n connect auxiliary sys/<pwd>@${standby_db_unique_name} \n`)
@@ -306,6 +345,7 @@ function create_duplicate_cmd(){
     
     if(omf_no.checked){
         duplicate_cmd.push(`SPFILE\n`)
+        duplicate_cmd.push(get_controlfile())
         duplicate_cmd.push(convert_parameters())
     }    
     duplicate_cmd.push(`}`)
@@ -353,43 +393,74 @@ function is_until(){
         // console.log(until_time);
         let tmp=until_time.replace('T',' ')
         // console.log();
-        set_until.push(`SET UNTIL TIME 'to_date('${tmp}','RRRR-MM-DD HH24:MI')`);
+        set_until.push(` UNTIL TIME "to_date('${tmp}','RRRR-MM-DD HH24:MI')"`);
     }
     if(set_until_scn.checked){
-        set_until.push(`SET UNTIL SCN ${until_scn}`)
+        set_until.push(` UNTIL SCN ${until_scn}`)
     }
     if(set_until_logseq.checked){
-        set_until.push(`SET UNTIL SEQUENCE ${until_log}`)
+        set_until.push(` UNTIL SEQUENCE ${until_log}`)
     }
     return set_until
 }
 function create_ubkploc_duplicate() {
     duplicate_cmd_ubkploc=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
-    duplicate_cmd_ubkploc.push(`rman auxiliary /\n`)
+    duplicate_cmd_ubkploc.push(`connect auxiliary /\n`)
     duplicate_cmd_ubkploc.push(`run {\n`)
-    duplicate_cmd_ubkploc.push(`DUPLICATE DATABASE TO ${standby_db_name}\n`)
-    //check if set_until_time is checked
-    duplicate_cmd_ubkploc.push(is_until())
-    duplicate_cmd_ubkploc.push(`SPFILE\n`)
+    if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
+        console.log("WIP");
+        duplicate_cmd_ubkploc.push(`set newname for database to '${standby_df_path_name}/%U';\n`)
+        duplicate_cmd_ubkploc.push(`DUPLICATE DATABASE TO ${standby_db_name}\n`)
+        //check if set_until_time is checked
+        duplicate_cmd_ubkploc.push(is_until())
+        duplicate_cmd_ubkploc.push(`\nSPFILE\n`)
+        duplicate_cmd_ubkploc.push(get_controlfile())
+        duplicate_cmd_ubkploc.push(`SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`)
+        duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`)
+        duplicate_cmd_ubkploc.push(`}\n`) 
+        return duplicate_cmd_ubkploc;
+    }
+    if(omf_yes.checked && nofilename_no.checked){
+        duplicate_cmd_ubkploc.push(`set newname for database to new;\n`)
+        duplicate_cmd_ubkploc.push(`DUPLICATE DATABASE TO ${standby_db_name}\n`)
+        //check if set_until_time is checked
+        duplicate_cmd_ubkploc.push(is_until())
+        duplicate_cmd_ubkploc.push(`\nSPFILE\n`)
+        duplicate_cmd_ubkploc.push(get_controlfile())
+        duplicate_cmd_ubkploc.push(`SET DB_CREATE_FILE_DEST='${standby_df_path_name}'\n`)
+        duplicate_cmd_ubkploc.push(`SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`)
+        duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`)
+        duplicate_cmd_ubkploc.push(`}\n`) 
+        return duplicate_cmd_ubkploc;
+    }
+    
     
     if(nofilename_yes.checked){
-        duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>'\n`)
+        duplicate_cmd_ubkploc.push(`DUPLICATE DATABASE TO ${standby_db_name}\n`)
+        //check if set_until_time is checked
+        duplicate_cmd_ubkploc.push(is_until())  
+        duplicate_cmd_ubkploc.push(`\nSPFILE\n`)      
+        duplicate_cmd_ubkploc.push(get_controlfile())
+        duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>'\n`)        
         duplicate_cmd_ubkploc.push('NOFILENAMECHECK;\n')
         duplicate_cmd_ubkploc.push(`}\n`)
         return duplicate_cmd_ubkploc;
     }
     if(omf_no.checked && setnewname_no.checked && nofilename_no.checked){
-        duplicate_cmd_ubkploc.push(`SET CONTROL_FILES='<give the path where you want control files to get created>'\n`)
+        duplicate_cmd_ubkploc.push(`DUPLICATE DATABASE TO ${standby_db_name}\n`)
+        //check if set_until_time is checked
+        duplicate_cmd_ubkploc.push(is_until())
+        duplicate_cmd_ubkploc.push(`\nSPFILE\n`)
+        duplicate_cmd_ubkploc.push(get_controlfile())
         // console.log("Calling convert");
         duplicate_cmd_ubkploc.push(convert_parameters())
+        duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`)
+        duplicate_cmd_ubkploc.push(`}\n`)    
+        return duplicate_cmd_ubkploc
     }
-    if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
-        console.log("WIP");
-        duplicate_cmd_ubkploc.push(`set newname for database to ${standby_df_path_name}/%U\n`)
-    }
-    duplicate_cmd_ubkploc.push(`BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`)
-    duplicate_cmd_ubkploc.push(`}\n`)    
-    return duplicate_cmd_ubkploc
+
+    
+    
 }
 function using_backup_location(){
     if (set_until_logseq.checked || set_until_scn.checked){
@@ -398,11 +469,11 @@ function using_backup_location(){
     console.log("using backup location starting .....");
     document.getElementById("bkp_primary_db_ubkploc").value=`RMAN> backup spfile ;\nRMAN> backup database include current controlfile plus archivelog ;\n`
     document.getElementById("move_backup_ubkploc").value=`If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.`
-    document.getElementById("copy_pwd_file_ubkploc").value=create_pwdfile().join("")
+    // document.getElementById("copy_pwd_file_ubkploc").value=create_pwdfile().join("")
     if(omf_yes.checked){
         document.getElementById("create_pfile_ubkploc").value=create_omf_pfile().join("")
     }else{
-        document.getElementById("create_pfile_ubkploc").value=`Create pfile only with ${standby_db_name} as parameter`
+        document.getElementById("create_pfile_ubkploc").value=create_pfile().join("")
     }
     document.getElementById("startup_nomount_ubkploc").value=`export ORACLE_SID=${standby_db_name}\nsql> startup nomount\nsql>exit`
     document.getElementById("duplicate_cmd_ubkploc").value=create_ubkploc_duplicate().join("")
@@ -412,8 +483,7 @@ function using_backup_location(){
 }
 function create_ucatnotar_duplicate(){
     duplicate_cmd_ucatnotar=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
-    duplicate_cmd_ucatnotar.push(`rman auxiliary / catalog <catalog schema>/<password>@<catalog service>\n`)
-    duplicate_cmd_ucatnotar.push(`RMAN> startup clone mount\n`)
+    duplicate_cmd_ucatnotar.push(`connect auxiliary / catalog <catalog schema>/<password>@<catalog service>\n`)
     duplicate_cmd_ucatnotar.push(`run {\n`)
     if(disk.checked){
         duplicate_cmd_ucatnotar.push(`allocate auxiliary channel ch1 type disk;\n`)
@@ -421,21 +491,41 @@ function create_ucatnotar_duplicate(){
         duplicate_cmd_ucatnotar.push(`allocate auxiliary channel sb1 type sbt params <provide tape parameters>\n`)
     }
     duplicate_cmd_ucatnotar.push(`// you can allocate multiple channles <please remove this line>\n`)
-    duplicate_cmd_ucatnotar.push(`DUPLICATE DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
-    duplicate_cmd_ucatnotar.push(is_until())
-    duplicate_cmd_ucatnotar.push(`\nSPFILE\n`)
+    
     if(nofilename_yes.checked){
+        duplicate_cmd_ucatnotar.push(`DUPLICATE DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_ucatnotar.push(is_until())
+        duplicate_cmd_ucatnotar.push(`\nSPFILE\n`)
+        duplicate_cmd_ucatnotar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
         duplicate_cmd_ucatnotar.push('NOFILENAMECHECK;\n')
         duplicate_cmd_ucatnotar.push(`}\n`)
         return duplicate_cmd_ucatnotar;
     }
     if(setnewname_yes.checked && nofilename_no.checked && omf_no.checked){
-        duplicate_cmd_ucatnotar.push(`set newname for database to '${standby_df_path_name}/%U'\n`)
+        duplicate_cmd_ucatnotar.push(`set newname for database to '${standby_df_path_name}/%U';\n`)
+        duplicate_cmd_ucatnotar.push(`DUPLICATE DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_ucatnotar.push(is_until())
+        duplicate_cmd_ucatnotar.push(`\nSPFILE\n`)
+        duplicate_cmd_ucatnotar.push(`set CONTROL_FILES='${standby_cf_path_name};'\n`)
         duplicate_cmd_ucatnotar.push(`}\n`)
         return duplicate_cmd_ucatnotar;
     }
+    if(omf_yes.checked && nofilename_no.checked){
+        duplicate_cmd_ucatnotar.push(`set newname for database to new;\n`)
+        duplicate_cmd_ucatnotar.push(`DUPLICATE DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_ucatnotar.push(is_until())
+        duplicate_cmd_ucatnotar.push(`\nSPFILE\n`)
+        duplicate_cmd_ucatnotar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
+        duplicate_cmd_ucatnotar.push(`set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`)        
+        duplicate_cmd_ucatnotar.push(`\n}`)
+        return duplicate_cmd_ucatnotar
+    }
+    duplicate_cmd_ucatnotar.push(`DUPLICATE DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+    duplicate_cmd_ucatnotar.push(is_until())
+    duplicate_cmd_ucatnotar.push(`\nSPFILE\n`)
+    duplicate_cmd_ucatnotar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
     duplicate_cmd_ucatnotar.push(convert_parameters())
-    duplicate_cmd_ucatnotar.push(`\n}`)
+    duplicate_cmd_ucatnotar.push(`\n;}`)
     return duplicate_cmd_ucatnotar
 }
 
@@ -447,7 +537,12 @@ function targetless_with_catalog(){
     } else {
         document.getElementById("move_backup_ucatnotar").value=`You can skip this step. This is only applicable for disk backups`
     }
-    document.getElementById("startup_nomount_ucatnotar").value=`set the oracle sid: export ORACLE_SID=${standby_db_name}`
+    if(omf_yes.checked){
+        document.getElementById("startup_nomount_ucatnotar").value=create_pfile().join("")
+    } else{
+        document.getElementById("startup_nomount_ucatnotar").value=create_pfile().join("")
+    }
+    
     document.getElementById("duplicate_cmd_ucatnotar").value=create_ucatnotar_duplicate().join("")
     document.getElementById("run_ucatnotar").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
     document.getElementById("monitor_ucatnotar").value=monitor_duplicate()
@@ -456,35 +551,59 @@ function targetless_with_catalog(){
 function create_using_target_bkp_duplicate(){
     duplicate_cmd_usingtar=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
     if(catalog_yes.checked){
-        duplicate_cmd_usingtar.push(`rman target sys/<pwd>@<target> catalog <catalog schema>/<password>@<catalog service> auxiliary /\n`)
+        duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target> catalog <catalog schema>/<password>@<catalog service> auxiliary /\n`)
     }else {
-        duplicate_cmd_usingtar.push(`rman target sys/<pwd>@<target> auxiliary /\n`)
+        duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target> auxiliary /\n`)
+        
     }
     duplicate_cmd_usingtar.push(`run {\n`)    
     if(disk.checked){        
+        duplicate_cmd_usingtar.push(`allocate channel ch1 type disk;\n`)
         duplicate_cmd_usingtar.push(`allocate auxiliary channel ch2 type disk;\n`)
     }else{        
-        duplicate_cmd_usingtar.push(`allocate auxiliary channel sb1 type sbt params <provide tape parameters>\n`)
+        duplicate_cmd_usingtar.push(`allocate channel sb1 type disk;\n`)
+        duplicate_cmd_usingtar.push(`allocate auxiliary channel sb2 type sbt params <provide tape parameters>\n`)
     }
     duplicate_cmd_usingtar.push(`// you can allocate multiple auxiliary channels <please remove this line>\n`)
-    duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
-    duplicate_cmd_usingtar.push(is_until())
-    duplicate_cmd_usingtar.push(`\nSPFILE\n`)
+
     if(nofilename_yes.checked){
+        duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_usingtar.push(is_until())
+        duplicate_cmd_usingtar.push(`\nSPFILE\n`)
+        duplicate_cmd_usingtar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
         duplicate_cmd_usingtar.push('NOFILENAMECHECK;\n')
         duplicate_cmd_usingtar.push(`}\n`)
         return duplicate_cmd_usingtar;
     }
     if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
-        duplicate_cmd_usingtar.push(`set newname for database to '${standby_df_path_name}/%U'\n`)
+        duplicate_cmd_usingtar.push(`set newname for database to '${standby_df_path_name}/%U';\n`)
+        duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_usingtar.push(is_until())
+        duplicate_cmd_usingtar.push(`\nSPFILE\n`)
+        duplicate_cmd_usingtar.push(`set CONTROL_FILES='${standby_cf_path_name};'\n`)
         duplicate_cmd_usingtar.push(`}\n`)
         return duplicate_cmd_usingtar;
     }
     if(omf_no.checked && nofilename_no.checked &&setnewname_no.checked){
+        duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_usingtar.push(is_until())
+        duplicate_cmd_usingtar.push(`\nSPFILE\n`)
+        duplicate_cmd_usingtar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
         duplicate_cmd_usingtar.push(convert_parameters())
+        duplicate_cmd_usingtar.push(`\n;}`)
+        return duplicate_cmd_usingtar
     }
-    duplicate_cmd_usingtar.push(`\n}`)
-    return duplicate_cmd_usingtar
+    if(omf_yes.checked && nofilename_no.checked){
+        duplicate_cmd_usingtar.push(`set newname for database to new;\n`)
+        duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_usingtar.push(is_until())
+        duplicate_cmd_usingtar.push(`\nSPFILE\n`)
+        duplicate_cmd_usingtar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
+        duplicate_cmd_usingtar.push(`set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`)        
+        duplicate_cmd_usingtar.push(`\n}`)
+        return duplicate_cmd_usingtar
+    }
+
 }
 
 function using_target_bkp_duplicate(){
@@ -496,9 +615,9 @@ function using_target_bkp_duplicate(){
     }
     document.getElementById("copy_pwd_file_usingtar").value=create_pwdfile().join("")
     if(omf_yes.checked){
-        document.getElementById("create_pfile_usingtar").value=create_omf_pfile().join("")
+        document.getElementById("create_pfile_usingtar").value=create_pfile().join("")
     } else{
-        document.getElementById("create_pfile_usingtar").value=`Create pfile only with ${standby_db_name} as parameter`
+        document.getElementById("create_pfile_usingtar").value=create_pfile().join("")
     }
     
     document.getElementById("listener_usingtar").value=create_listener().join("");
@@ -513,9 +632,9 @@ function using_target_bkp_duplicate(){
 function create_stby_using_bkp_duplicate(){
     duplicate_cmd_usingstby=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
     if(catalog_yes.checked){
-        duplicate_cmd_usingstby.push(`rman target sys/<pwd>@<target> catalog <catalog schema>/<password>@<catalog service> auxiliary /\n`)
+        duplicate_cmd_usingstby.push(`connect target sys/<pwd>@<target> catalog <catalog schema>/<password>@<catalog service> auxiliary /\n`)
     }else {
-        duplicate_cmd_usingstby.push(`rman target sys/<pwd>@<target> auxiliary /\n`)
+        duplicate_cmd_usingstby.push(`connect target sys/<pwd>@<target> auxiliary /\n`)
     }
     duplicate_cmd_usingstby.push(`run {\n`)
     duplicate_cmd_usingtar.push(`allocate channel ch1 type disk;\n`)
@@ -524,22 +643,34 @@ function create_stby_using_bkp_duplicate(){
     }else{
         duplicate_cmd_usingstby.push(`allocate auxiliary channel sb1 type sbt params <provide tape parameters>\n`)
     }
-    duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
-    duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
-    duplicate_cmd_usingstby.push(is_until())
-    duplicate_cmd_usingstby.push(`\nSPFILE\n`)
+    
     if(nofilename_yes.checked){
+        duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
+        duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
+        duplicate_cmd_usingstby.push(is_until())
+        duplicate_cmd_usingstby.push(`\nSPFILE\n`)
+        duplicate_cmd_usingstby.push(`set CONTTROL_FILES='${standby_cf_path_name}'`)
         duplicate_cmd_usingstby.push('NOFILENAMECHECK;\n')
         duplicate_cmd_usingstby.push(`}\n`)
         return duplicate_cmd_usingstby;
     }
     if(setnewname_yes.checked){
-        duplicate_cmd_usingstby.push(`set new name ${standby_df_path_name}\n`)
+        duplicate_cmd_usingstby.push(`set new name '${standby_df_path_name}';\n`)
+        duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
+        duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
+        duplicate_cmd_usingstby.push(is_until())
+        duplicate_cmd_usingstby.push(`\nSPFILE\n`)
+        duplicate_cmd_usingstby.push(`set CONTTROL_FILES='${standby_cf_path_name}'`)        
         duplicate_cmd_usingstby.push(`}\n`)
         return duplicate_cmd_usingstby;
     }
+    duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
+    duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
+    duplicate_cmd_usingstby.push(is_until())
+    duplicate_cmd_usingstby.push(`\nSPFILE\n`)
+    duplicate_cmd_usingstby.push(`set CONTTROL_FILES='${standby_cf_path_name}'`)        
     duplicate_cmd_usingstby.push(convert_parameters())
-    duplicate_cmd_usingstby.push(`\n}`)
+    duplicate_cmd_usingstby.push(`\n;}`)
 }
 function create_standby_using_bkp_func(){
     console.log("Creating standby");
@@ -551,9 +682,9 @@ function create_standby_using_bkp_func(){
     }
     document.getElementById("copy_pwd_file_stby").value=create_pwdfile().join("")
     if(omf_yes.checked){
-        document.getElementById("create_pfile_stby").value=create_omf_pfile().join("")
+        document.getElementById("create_pfile_stby").value=create_pfile().join("")
     }else{
-        document.getElementById("create_pfile_stby").value=`Create pfile only with ${standby_db_name} as parameter`
+        document.getElementById("create_pfile_stby").value=create_pfile().join("")
     }
     
     document.getElementById("listener_stby").value=create_listener().join("");
@@ -628,6 +759,7 @@ function gen_instruction(){
  standby_df_path_name=document.getElementById("df_s_name").value
  primary_lf_path_name=document.getElementById("lf_p_name").value 
  standby_lf_path_name=document.getElementById("lf_s_name").value
+ standby_cf_path_name=document.getElementById("cf_s_name").value
 //  primary_version=primary_version_options.options[primary_version_options.selectedIndex].value
 //  standby_version=standby_version_options.options[standby_version_options.selectedIndex].value
 //  console.log(primary_version);
@@ -638,6 +770,7 @@ primary_df_path_name.includes(',')?  primary_df_path_name = primary_df_path_name
 standby_df_path_name.includes(',')? standby_df_path_name=standby_df_path_name.split(',') :standby_df_path_name=document.getElementById("df_s_name").value
 primary_lf_path_name.includes(',') ? primary_lf_path_name=primary_lf_path_name.split(','):  primary_lf_path_name=document.getElementById("lf_p_name").value //log file path
 standby_lf_path_name.includes(',') ? standby_lf_path_name=standby_lf_path_name.split(','):standby_lf_path_name=document.getElementById("lf_s_name").value
+standby_cf_path_name.includes(',') ? standby_cf_path_name=standby_cf_path_name.split(','):standby_cf_path_name=document.getElementById("cf_s_name").value
 //  primary_OH_name=document.getElementById("oh_p_name").value // ORACLE_HOME
 //  standby_OH_name=document.getElementById("oh_s_name").value // ORACLE_HOME
 until_time=document.getElementById("until_time").value
