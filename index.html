@@ -269,6 +269,34 @@
             <textarea id="monitor_active_duplicate" name="message" rows="15" cols="90"> </textarea>
 
         </div>  
+        <div id="active_duplicate_standby_div" class="grid-item">
+           
+            <br>Step 1: Add standby redo logs on primary database<br>
+            <textarea id="srl_ad_stby" name="message" rows="8" cols="90"> </textarea>
+            <br>step 2: Create auxiliary pfile<br>
+            <textarea id="pfile_ad_stby" name="message" rows="8" cols="90"></textarea>
+            <br>Step 3: copy the password File<br>
+            <textarea id="pwdfile_ad_stby" name="message" rows="8" cols="90"> </textarea>
+            <br>step 4: Nomount the auxiliary instance using pfile<br>
+            <textarea id="startup_nomount_ad_stby" name="message" rows="8" cols="90"> </textarea>
+            <br>step 5a: Add the below listener entry to listener.ora in auxiliary<br>
+            <textarea id="listener_ad_stby" name="message" rows="15" cols="90"> </textarea>
+            <br>step 5b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
+            <textarea id="tns_ad_stby" name="message" rows="15" cols="90"> </textarea>
+            <br>Step 6: Verify rman connectivity<br>
+            <textarea id="rman_connectivity_ad_stby" name="message" rows="8" cols="90"> </textarea>
+            <br>step 7: Create duplicate cmd File<br>
+            <textarea id="duplicate_cmd_ad_stby" name="message" rows="15" cols="90"> </textarea>
+            <br>step 8: Run duplicate<br>
+            <textarea id="run_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
+            <br>Step 9: Monitor<br>
+            <textarea id="monitor_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
+            <br>Step 10: Configure DG Broker<br>
+            <textarea id="broker_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
+            <br>Step 11: Verify DG config<br>
+            <textarea id="verify_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
+
+        </div>  
         <div id="backup_duplicate_div" class="grid-item">
             <h1> Backup based duplicate</h1>
             
@@ -333,38 +361,45 @@
             </div>
             <div id="create_standby_using_bkp">
                 create standby using bkp
-                <br>Step 1: Make sure you have backups on primary<br>
+                <br>Step 1: Add standby redo logs on primary database<br>
+                 <textarea id="srl_bkp_stby" name="message" rows="8" cols="90"> </textarea>
+                <br>Step 2: Make sure you have backups on primary<br>
                 <textarea id="bkp_primary_stby" name="message" rows="8" cols="90"></textarea>
                 <!-- <p id="bkp_primary_stby"></p> -->
-                <br>Step 2: Move backup pieces<br>
+                <br>Step 3: Move backup pieces<br>
                 <textarea id="move_backup_stby" name="message" rows="8" cols="90"></textarea>
                 <!-- <p id="move_backup_stby"></p> -->
-                <br>Step 3: Copy password file from primary to aux<br>
+                <br>Step 4: Copy password file from primary to aux<br>
                 <textarea id="copy_pwd_file_stby" name="message" rows="8" cols="90"></textarea>
                 <!-- <p id="copy_pwd_file_stby"></p> -->
-                <br>Step 4: Create pfile with only db_name parameter<br>
+                <br>Step 5: Create pfile with only db_name parameter<br>
                 <textarea id="create_pfile_stby" name="message" rows="8" cols="90"></textarea>
                 <!-- <p id="create_pfile_stby"></p> -->
-                <br>step 4a: Add the below listener entry to listener.ora in auxiliary<br>
+                <br>step 6a: Add the below listener entry to listener.ora in auxiliary<br>
                 <textarea id="listener_stby" name="message" rows="15" cols="90"> </textarea>
                 <!-- <p id="listener_stby"></p> -->
-                <br>step 4b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
+                <br>step 6b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
                 <textarea id="tns_stby" name="message" rows="15" cols="90"> </textarea>
                 <!-- <p id="tns_stby"></p> -->
-                <br>Step 5: Verify rman connectivity<br>
+                <br>Step 7: Verify rman connectivity<br>
                 <textarea id="rman_connectivity_stby" name="message" rows="8" cols="90"> </textarea>
                 <!-- <p id="rman_connectivity_stby"></p> -->
-                <br>Step 6: Startup Nomount<br>
+                <br>Step 8: Startup Nomount<br>
                 <textarea id="startup_nomount_stby" name="message" rows="8" cols="90"></textarea>
                 <!-- <p id="startup_nomount_stby"></p> -->
-                <br>Step 7: Create duplicate cmd File<br>
+                <br>Step 9: Create duplicate cmd File<br>
                 <textarea id="duplicate_cmd_stby" name="message" rows="8" cols="90"></textarea>
                 <!-- <p id="duplicate_cmd_stby"></p> -->
-                <br>Step 8: Run duplicate<br>
+                <br>Step 10: Run duplicate<br>
                 <textarea id="run_stby" name="message" rows="15" cols="90"> </textarea>
                 <!-- <p id="run_stby"></p> -->
-                <br>Step 9: Monitor<br>
+                <br>Step 11: Monitor<br>
                 <textarea id="monitor_stby" name="message" rows="15" cols="90"> </textarea>
+                <br>Step 12: Configure DG Broker<br>
+                <textarea id="broker_active_duplicate_bkp_stby" name="message" rows="15" cols="90"> </textarea>
+                <br>Step 11: Verify DG config<br>
+                <textarea id="verify_active_duplicate_bkp_stby" name="message" rows="15" cols="90"> </textarea>
+    
                 <!-- <p id="monitor_stby"></p> -->
             </div>
         </div>

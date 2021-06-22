@@ -9,6 +9,7 @@ var isActiveDuplicate=document.getElementById("active_duplicate")
 var isBackupDuplicate=document.getElementById("backup_duplicate")
 var activeDiv=document.getElementById("active_duplicate_div")
 var bkpDiv=document.getElementById("backup_duplicate_div")
+var activestbydiv=document.getElementById("active_duplicate_standby_div")
 var using_nocatalog_notarget=document.getElementById("using_nocatalog_notarget")
 var using_catalog_notarget=document.getElementById("using_catalog_notarget")
 var using_target=document.getElementById("using_target")
@@ -96,6 +97,7 @@ function toggle_active_elements(toggle){
 //Block on first run
 activeDiv.style.display="none"
 bkpDiv.style.display="none"
+activestbydiv.style.display="none"
 toggle_bkp_elements("none")
 error_text.style.display="none"
 
@@ -366,6 +368,7 @@ function monitor_duplicate(){
 function active_duplicate(){
     //  if( isActiveDuplicate.checked && isDuplicate.checked){
         console.log("Starting instructions for active duplicate")
+        activestbydiv.style.display="none"
         activeDiv.style.display="block"
         if(omf_yes.checked){
             document.getElementById("pfile").value=create_omf_pfile().join("")    
@@ -386,6 +389,56 @@ function active_duplicate(){
         // error_text.style.display="none"
         // create_standby_using_bkp_func.style.display="none"
     //  }    
+}
+function add_srl(){
+    let add_srl=[]
+    add_srl.push(`Standby redo logs should be of the same size as that of primary online redo logs.\n`)
+    add_srl.push(`For eg: If primary has 2 groups in thread 1, standby should have 3 groups in corresponding thread 1\n`)
+    add_srl.push(`Refer note: Handling ORL and SRL (Resize) on Primary and Physical Standby in Data Guard Environment (Doc ID 1532566.1)`)
+    return add_srl;
+}
+function configure_broker(){
+    return `Follow the below note and create dataguard broker configuration:
+    12c Create Dataguard Broker Configuration - DGMGRL (Doc ID 1583588.1) `
+}
+function verify_dg_config(){
+    return `Run the following queries to verify primary is shipping logs and standby is applying them:
+    ON PRIMARY DATABASE:
+-----------------------------------
+SQL> alter system switch logfile; //execute a couple of times
+ SQL> select thread#, max(sequence#) "Last Primary Seq Generated" from gv$archived_log val, v$database vdb where val.resetlogs_change# = vdb.resetlogs_change# group by thread# order by 1;
+
+SQL>SELECT thread#, dest_id, gvad.status, error, fail_sequence FROM gv$archive_dest gvad, gv$instance gvi WHERE gvad.inst_id = gvi.inst_id AND destination is NOT NULL ORDER BY thread#, dest_id;
+
+ON STANDBY DATABASE
+---------------------------------------------
+
+SQL> select thread#, max(sequence#) "Last Standby Seq Received" from gv$archived_log val, v$database vdb where val.resetlogs_change# = vdb.resetlogs_change# group by thread# order by 1;
+
+
+SQL>  select thread#, max(sequence#) "Last Standby Seq Applied" from gv$archived_log val, v$database vdb where val.resetlogs_change# = vdb.resetlogs_change# and val.applied in ('YES','IN-MEMORY') group by thread# order by 1;
+
+SQL> select PROCESS,STATUS,THREAD#,SEQUENCE#,BLOCK#,BLOCKS from gv$managed_standby;
+`
+}
+function active_duplicate_standby(){
+    console.log("Starting instructions for active duplicate")
+    activeDiv.style.display="none"
+    bkpDiv.style.display="none"
+    activestbydiv.style.display="block"
+    document.getElementById("srl_ad_stby").value=add_srl().join("")
+    document.getElementById("pfile_ad_stby").value=create_pfile().join("")
+    document.getElementById("listener_ad_stby").value=create_listener().join("");
+    document.getElementById("tns_ad_stby").value=create_tns().join("");
+    document.getElementById("pwdfile_ad_stby").value=create_pwdfile().join("")
+    document.getElementById("startup_nomount_ad_stby").value=startup_nomount()
+    document.getElementById("rman_connectivity_ad_stby").value=verify_rman_connectivity() 
+    document.getElementById("duplicate_cmd_ad_stby").value=create_duplicate_cmd().join("")
+    document.getElementById("run_active_duplicate_ad_stby").value=run_active_duplicate().join("")
+    document.getElementById("monitor_active_duplicate_ad_stby").value=monitor_duplicate()
+    document.getElementById("broker_active_duplicate_ad_stby").value=configure_broker()
+    document.getElementById("verify_active_duplicate_ad_stby").value=verify_dg_config()
+
 }
 function is_until(){
     let set_until=[]
@@ -674,6 +727,7 @@ function create_stby_using_bkp_duplicate(){
 }
 function create_standby_using_bkp_func(){
     console.log("Creating standby");
+    document.getElementById("srl_bkp_stby").value=add_srl().join("")
     document.getElementById("bkp_primary_stby").value=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
     if(disk.checked){
         document.getElementById("move_backup_stby").value=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
@@ -694,6 +748,8 @@ function create_standby_using_bkp_func(){
     document.getElementById("duplicate_cmd_stby").value=create_stby_using_bkp_duplicate().join("")
     document.getElementById("run_stby").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
     document.getElementById("monitor_stby").value=monitor_duplicate()
+    document.getElementById("broker_active_duplicate_bkp_stby").value=configure_broker()
+    document.getElementById("verify_active_duplicate_bkp_stby").value=verify_dg_config()
     create_standby_using_bkp.style.display=""
 }
 
@@ -778,14 +834,20 @@ until_scn=document.getElementById("until_scn").value
 until_log=document.getElementById("until_log").value
 
 
-if(isActiveDuplicate.checked){
+if(isActiveDuplicate.checked && isCloneDB.checked){
     error_text.style.display="none"
     active_duplicate()   
+}
+
+if(isActiveDuplicate.checked && isStandby.checked){
+    error_text.style.display="none"
+    active_duplicate_standby()
 }
     
 
 if (isBackupDuplicate.checked){
     activeDiv.style.display="none"
+    activestbydiv.style.display="none"
     bkpDiv.style.display=""
     //backup duplicate
     backup_duplicate()
