@@ -247,7 +247,7 @@ function create_omf_pfile(){
 function create_pwdfile(){
     pwd_file=[]
     pwd_file.push(`On the source database check if password file exists:\n`)
-    pwd_file.push(`ls -ltr *pw*${primary_db_unique_name}*\n`)
+    pwd_file.push(`ls -ltr $ORACLE_HOME/dbs/*pw*${primary_db_unique_name}*\n`)
     if(standby_db_name === standby_db_unique_name){
         pwd_file.push( `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`)
         pwd_file.push(`If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_unique_name}.ora PASSWORD=<password>\n`)
@@ -255,14 +255,14 @@ function create_pwdfile(){
     } else {
         pwd_file.push( `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_name}.ora\n`)
         pwd_file.push(`If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_name}.ora PASSWORD=<password>\n`)
-        pwd_file.push(`copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_name}.ora\n`)
+        pwd_file.push(`copy the password file to $ORACLE_HOME/dbs on the destination database and rename it to ORAPWD${standby_db_name}.ora\n`)
     }
 
     return pwd_file
 }
 
 function startup_nomount(){
-    return `Connect to sqlplus as sysdba \n SQL> startup nomount $ORACLE_HOME/dbs/init${standby_db_unique_name}`
+    return `Connect to sqlplus as sysdba \n SQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`
 }
 
 function verify_rman_connectivity(){
@@ -274,7 +274,7 @@ function convert_parameters(){
     // check if they are same length
     console.log("Running convert");
     let convert_array=[]
-    if(Array.isArray(primary_df_path_name)){        
+    if(Array.isArray(standby_df_path_name)){        
         if (!Array.isArray(standby_df_path_name)){
             standby_df_path_name=standby_df_path_name.split()
         } 
@@ -331,8 +331,9 @@ function get_controlfile(){
 }
 function create_duplicate_cmd(){
     duplicate_cmd=[`Create a file: rman_active_duplicate.cmd and enter the below:\n`]
-    duplicate_cmd.push(`rman\n connect target sys/<pwd>@${primary_db_unique_name} \n connect auxiliary sys/<pwd>@${standby_db_unique_name} \n`)
+    duplicate_cmd.push(`connect target sys/<pwd>@${primary_db_unique_name} \n connect auxiliary sys/<pwd>@${standby_db_unique_name} \n`)
     duplicate_cmd.push(`run { \n`)
+    duplicate_cmd.push(`set echo on;\n`)
     //check if standby or clone
     if(isStandby.checked){
         duplicate_cmd.push(`DUPLICATE TARGET DATABASE\n FOR STANDBY\n FROM ACTIVE DATABASE\n`)
@@ -362,9 +363,16 @@ function run_active_duplicate(){
 }
 
 function monitor_duplicate(){
-    return `Please monitor the /tmp/<duplicate>.log file to verify successfult  completion`
+    return `Please monitor the /tmp/<duplicate>.log file to verify successful  completion. 
+        If you receive any errors, please follow the doc# 1671431.1 and create an SR with the output`
 }
-
+function verify_backup(){
+    return `Make sure you have full backups along with archive logs 
+    Please run RMAN> restore preview; to get a list of backups that would be used.
+    If not take a backup of spfile and full backup along with archive logs:
+    RMAN> backup spfile;
+    RMAN> backup database plus archivelog;`
+}
 function active_duplicate(){
     //  if( isActiveDuplicate.checked && isDuplicate.checked){
         console.log("Starting instructions for active duplicate")
@@ -460,9 +468,10 @@ function create_ubkploc_duplicate() {
     duplicate_cmd_ubkploc=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
     duplicate_cmd_ubkploc.push(`connect auxiliary /\n`)
     duplicate_cmd_ubkploc.push(`run {\n`)
+    duplicate_cmd_ubkploc.push(`set echo on;\n`)
     if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
         console.log("WIP");
-        duplicate_cmd_ubkploc.push(`set newname for database to '${standby_df_path_name}/%U';\n`)
+        duplicate_cmd_ubkploc.push(`set newname for database to '${standby_df_path_name}/%b';\n`)
         duplicate_cmd_ubkploc.push(`DUPLICATE DATABASE TO ${standby_db_name}\n`)
         //check if set_until_time is checked
         duplicate_cmd_ubkploc.push(is_until())
@@ -520,15 +529,16 @@ function using_backup_location(){
         show_error_meesage("You can select only until time when using backup location")
     }
     console.log("using backup location starting .....");
-    document.getElementById("bkp_primary_db_ubkploc").value=`RMAN> backup spfile ;\nRMAN> backup database include current controlfile plus archivelog ;\n`
-    document.getElementById("move_backup_ubkploc").value=`If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.`
+    document.getElementById("bkp_primary_db_ubkploc").value=verify_backup()
+    document.getElementById("move_backup_ubkploc").value=`If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.
+    If you are using tape, ensure your media manager is configured on the auxiliary server so it is able to restore the backups from tape`
     // document.getElementById("copy_pwd_file_ubkploc").value=create_pwdfile().join("")
     if(omf_yes.checked){
         document.getElementById("create_pfile_ubkploc").value=create_omf_pfile().join("")
     }else{
         document.getElementById("create_pfile_ubkploc").value=create_pfile().join("")
     }
-    document.getElementById("startup_nomount_ubkploc").value=`export ORACLE_SID=${standby_db_name}\nsql> startup nomount\nsql>exit`
+    document.getElementById("startup_nomount_ubkploc").value=startup_nomount()
     document.getElementById("duplicate_cmd_ubkploc").value=create_ubkploc_duplicate().join("")
     document.getElementById("run_ubkploc").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
     document.getElementById("monitor_ubkploc").value=monitor_duplicate()
@@ -538,6 +548,7 @@ function create_ucatnotar_duplicate(){
     duplicate_cmd_ucatnotar=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
     duplicate_cmd_ucatnotar.push(`connect auxiliary / catalog <catalog schema>/<password>@<catalog service>\n`)
     duplicate_cmd_ucatnotar.push(`run {\n`)
+    duplicate_cmd_ucatnotar.push(`set echo on;\n`)
     if(disk.checked){
         duplicate_cmd_ucatnotar.push(`allocate auxiliary channel ch1 type disk;\n`)
     }else{
@@ -555,7 +566,7 @@ function create_ucatnotar_duplicate(){
         return duplicate_cmd_ucatnotar;
     }
     if(setnewname_yes.checked && nofilename_no.checked && omf_no.checked){
-        duplicate_cmd_ucatnotar.push(`set newname for database to '${standby_df_path_name}/%U';\n`)
+        duplicate_cmd_ucatnotar.push(`set newname for database to '${standby_df_path_name}/%b';\n`)
         duplicate_cmd_ucatnotar.push(`DUPLICATE DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
         duplicate_cmd_ucatnotar.push(is_until())
         duplicate_cmd_ucatnotar.push(`\nSPFILE\n`)
@@ -584,18 +595,18 @@ function create_ucatnotar_duplicate(){
 
 function targetless_with_catalog(){
     // console.log("Coming soon - Targetless with catalog");
-    document.getElementById("bkp_primary_db_ucatnotar").value=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
+    document.getElementById("bkp_primary_db_ucatnotar").value=verify_backup()
     if(disk.checked){
         document.getElementById("move_backup_ucatnotar").value=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
     } else {
         document.getElementById("move_backup_ucatnotar").value=`You can skip this step. This is only applicable for disk backups`
     }
     if(omf_yes.checked){
-        document.getElementById("startup_nomount_ucatnotar").value=create_pfile().join("")
+        document.getElementById("create_pfile_ucatnotar").value=create_pfile().join("")
     } else{
-        document.getElementById("startup_nomount_ucatnotar").value=create_pfile().join("")
+        document.getElementById("create_pfile_ucatnotar").value=create_pfile().join("")
     }
-    
+    document.getElementById("startup_nomount_ucatnotar").value=startup_nomount()
     document.getElementById("duplicate_cmd_ucatnotar").value=create_ucatnotar_duplicate().join("")
     document.getElementById("run_ucatnotar").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
     document.getElementById("monitor_ucatnotar").value=monitor_duplicate()
@@ -604,12 +615,16 @@ function targetless_with_catalog(){
 function create_using_target_bkp_duplicate(){
     duplicate_cmd_usingtar=[`Create a file: rman_duplicate.cmd and enter the below:\n`]
     if(catalog_yes.checked){
-        duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target> catalog <catalog schema>/<password>@<catalog service> auxiliary /\n`)
+        duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target>\n`)
+        duplicate_cmd_usingtar.push(`connect catalog <catalog schema>/<password>@<catalog service>\n`)
+        duplicate_cmd_usingtar.push(`connect auxiliary /\n`)
     }else {
-        duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target> auxiliary /\n`)
+        duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target>\n`)
+        duplicate_cmd_usingtar.push(`connect auxiliary /\n`)
         
     }
     duplicate_cmd_usingtar.push(`run {\n`)    
+    duplicate_cmd_usingtar.push(`set echo on;\n`)  
     if(disk.checked){        
         duplicate_cmd_usingtar.push(`allocate channel ch1 type disk;\n`)
         duplicate_cmd_usingtar.push(`allocate auxiliary channel ch2 type disk;\n`)
@@ -620,7 +635,7 @@ function create_using_target_bkp_duplicate(){
     duplicate_cmd_usingtar.push(`// you can allocate multiple auxiliary channels <please remove this line>\n`)
 
     if(nofilename_yes.checked){
-        duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
+        duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} to ${standby_db_name}\n`)
         duplicate_cmd_usingtar.push(is_until())
         duplicate_cmd_usingtar.push(`\nSPFILE\n`)
         duplicate_cmd_usingtar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
@@ -629,7 +644,7 @@ function create_using_target_bkp_duplicate(){
         return duplicate_cmd_usingtar;
     }
     if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
-        duplicate_cmd_usingtar.push(`set newname for database to '${standby_df_path_name}/%U';\n`)
+        duplicate_cmd_usingtar.push(`set newname for database to '${standby_df_path_name}/%b';\n`)
         duplicate_cmd_usingtar.push(`DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`)
         duplicate_cmd_usingtar.push(is_until())
         duplicate_cmd_usingtar.push(`\nSPFILE\n`)
@@ -660,7 +675,7 @@ function create_using_target_bkp_duplicate(){
 }
 
 function using_target_bkp_duplicate(){
-    document.getElementById("bkp_primary_db_usingtar").value=`Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`
+    document.getElementById("bkp_primary_db_usingtar").value=verify_backup()
     if(disk.checked){
         document.getElementById("move_backup_usingtar").value=`move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`
     } else {
@@ -676,7 +691,7 @@ function using_target_bkp_duplicate(){
     document.getElementById("listener_usingtar").value=create_listener().join("");
     document.getElementById("tns_usingtar").value=create_tns().join("");
     document.getElementById("rman_connectivity_usingtar").value=verify_rman_connectivity() 
-    document.getElementById("startup_nomount_usingtar").value=`set the oracle sid: export ORACLE_SID=${standby_db_name}\nSQL> startup nomount\nsql>exit`
+    document.getElementById("startup_nomount_usingtar").value=startup_nomount()
     document.getElementById("duplicate_cmd_usingtar").value=create_using_target_bkp_duplicate().join("")
     document.getElementById("run_usingtar").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
     document.getElementById("monitor_usingtar").value=monitor_duplicate()
@@ -690,13 +705,13 @@ function create_stby_using_bkp_duplicate(){
         duplicate_cmd_usingstby.push(`connect target sys/<pwd>@<target> auxiliary /\n`)
     }
     duplicate_cmd_usingstby.push(`run {\n`)
-    duplicate_cmd_usingtar.push(`allocate channel ch1 type disk;\n`)
+    duplicate_cmd_usingstby.push(`set echo on;\n`)
+    duplicate_cmd_usingstby.push(`allocate channel ch1 type disk;\n`)
     if(disk.checked){
         duplicate_cmd_usingstby.push(`allocate auxiliary channel ch1 type disk;\n`)
     }else{
         duplicate_cmd_usingstby.push(`allocate auxiliary channel sb1 type sbt params <provide tape parameters>\n`)
-    }
-    
+    }    
     if(nofilename_yes.checked){
         duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
         duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
@@ -707,8 +722,8 @@ function create_stby_using_bkp_duplicate(){
         duplicate_cmd_usingstby.push(`}\n`)
         return duplicate_cmd_usingstby;
     }
-    if(setnewname_yes.checked){
-        duplicate_cmd_usingstby.push(`set new name '${standby_df_path_name}';\n`)
+    if(setnewname_yes.checked && omf_no.checked && nofilename_no.checked){
+        duplicate_cmd_usingstby.push(`set newname for database to '${standby_df_path_name}/%b';\n`)
         duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
         duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
         duplicate_cmd_usingstby.push(is_until())
@@ -717,14 +732,28 @@ function create_stby_using_bkp_duplicate(){
         duplicate_cmd_usingstby.push(`}\n`)
         return duplicate_cmd_usingstby;
     }
+    if(omf_yes.checked && nofilename_no.checked){
+        duplicate_cmd_usingstby.push(`set newname for database to new;\n`)
+        duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
+        duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
+        duplicate_cmd_usingstby.push(is_until())
+        duplicate_cmd_usingstby.push(`\nSPFILE\n`)
+        duplicate_cmd_usingstby.push(`set CONTTROL_FILES='${standby_cf_path_name}'`)
+        duplicate_cmd_usingstby.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`)
+        duplicate_cmd_usingstby.push(`set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`)        
+        duplicate_cmd_usingstby.push(`}\n`)
+        return duplicate_cmd_usingstby;
+    }
     duplicate_cmd_usingstby.push(`// you can allocate multiple channles <please remove this line>\n`)
     duplicate_cmd_usingstby.push(`duplicate target database for standby nofilenamecheck dorecover;\n`)
     duplicate_cmd_usingstby.push(is_until())
     duplicate_cmd_usingstby.push(`\nSPFILE\n`)
-    duplicate_cmd_usingstby.push(`set CONTTROL_FILES='${standby_cf_path_name}'`)        
+    duplicate_cmd_usingstby.push(`set CONTTROL_FILES='${standby_cf_path_name}'\n`)    
     duplicate_cmd_usingstby.push(convert_parameters())
     duplicate_cmd_usingstby.push(`\n;}`)
+    return duplicate_cmd_usingstby;
 }
+
 function create_standby_using_bkp_func(){
     console.log("Creating standby");
     document.getElementById("srl_bkp_stby").value=add_srl().join("")
@@ -744,7 +773,7 @@ function create_standby_using_bkp_func(){
     document.getElementById("listener_stby").value=create_listener().join("");
     document.getElementById("tns_stby").value=create_tns().join("");
     document.getElementById("rman_connectivity_stby").value=verify_rman_connectivity() 
-    document.getElementById("startup_nomount_stby").value=`set the oracle sid: export ORACLE_SID=${standby_db_name}\nSQL> startup nomount\nsql>exit`
+    document.getElementById("startup_nomount_stby").value=startup_nomount()
     document.getElementById("duplicate_cmd_stby").value=create_stby_using_bkp_duplicate().join("")
     document.getElementById("run_stby").value=`rman log=/tmp/rman_duplicate.log\nRMAN>@rman_duplicate.cmd\n`
     document.getElementById("monitor_stby").value=monitor_duplicate()
