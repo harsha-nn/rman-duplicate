@@ -1,154 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Restore and duplicate</title>
-    <link type="text/css" rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link type="text/css" rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div class="grid-container">
-        <!-- <label>Primary info:</label> -->
-        <div class="grid-item-1">
-            What are you planning to do? <br>
-            <!-- <input type="radio" id="restore" name="plan" value="restore">
+      <!-- <label>Primary info:</label> -->
+      <div class="grid-item-1">
+        What are you planning to do? <br />
+        <!-- <input type="radio" id="restore" name="plan" value="restore">
             <label for="restore">Restore/Recover a database</label><br> -->
-            <input type="radio" id="active_duplicate" name="plan" value="duplicate" checked>
-            <label for="active_duplicate_q_l">Run Active Duplicate</label><br>
-            <input type="radio" id="backup_duplicate" name="plan" value="duplicate">
-            <label for="backup_duplicate">Run Backup based Duplicate</label><br>
-            <!-- <input type="radio" id="stby" name="plan" value="standby"> -->
-            <label for="standby">standby or clone</label><br>
-            <!-- <div id="which_duplicate"> -->
-                <input type="radio" id="standby" name="dup" value="Active"  onchange="change_db_name(this)">
-                <label for="standby">Create a Standby</label><br>
-                <input type="radio" id="clone" name="dup" value="Backup" checked onchange="change_db_name(this)">
-                <label for="standby">Clone a database</label><br>
-            <!-- </div> -->
-        </div>
-        <div class="grid-item">
-            Provide database details:
-            <table style="width:100%">
-                <tr>
-                  <th>Property</th>
-                  <th>Source(target)</th>
-                  <th>Destination(auxiliary)</th>
-                </tr>
-                <tr>
-                    <td>DB_NAME</td>
-                    <td>
-                        <input type="text" id="db_p_name" value="chicago">
-                    </td>
-                    <td>
-                        <input type="text" id="db_s_name" value="chicago">
-                    </td>
-                </tr>
-                <tr id="l_db_u_name">
-                    <td >DB_UNIQUE_NAME</td>
-                    <td>
-                        <input type="text" id="db_pu_name" value="chicago">
-                    </td>
-                    <td>
-                        <input type="text" id="db_su_name" value="boston">
-                    </td>
-                </tr>
-                <tr id="l_host_name">
-                    <td>HOST</td>
-                    <td>
-                        <input type="text" id="host_p_name" value="primary.oracle.com">
-                    </td>
-                    <td>
-                        <input type="text" id="host_s_name" value="aux.oracle.com">
-                    </td>
-                </tr>
-                <tr id="l_port_name">
-                    <td>PORT</td>
-                    <td>
-                        <input type="text" id="port_p_name" value="1521">
-                    </td>
-                    <td>
-                        <input type="text" id="port_s_name" value="1521">
-                    </td>
-                </tr>
-                <tr id="l_domain_name">
-                    <td>DB DOMAIN</td>
-                    <td>
-                        <input type="text" id="domain_p_name" value="">
-                    </td>
-                    <td>
-                        <input type="text" id="domain_s_name" value="">
-                    </td>
-                </tr> 
-           
-                <tr id="is_nofilename">
-                    <td>Is the file structure same on source and target?</td>
-                    <td>
-                        <input type="radio" id="nofilename_yes" name="nofilename" value="nofilenamecheck" checked onchange="nofilenamecheck(this)">
-                        <label for="target">Yes</label><br>      
-                    </td>
-                    <td>
-                        <input type="radio" id="nofilename_no" name="nofilename" value="nofilenamecheck_no"  onchange="nofilenamecheck(this)">
-                        <label for="target">No</label><br>      
-                    </td>
-                </tr>   
-                <tr id="is_setnewname">
-                    <td>Are all the datafiles in one mount point on destination?</td>
-                    <td>
-                        <input type="radio" id="setnewname_yes" name="setnewname" value="setnewname" >
-                        <label for="target">Yes</label><br>      
-                    </td>
-                    <td>
-                        <input type="radio" id="setnewname_no" name="setnewname" value="setnewname_no" checked>
-                        <label for="target">No</label><br>      
-                    </td>
-                </tr> 
-                <tr id="is_omf_stby">
-                    <td>Are you using OMF on destination?</td>
-                    <td>
-                        <input type="radio" id="omf_yes" name="omf" value="omf" >
-                        <label for="target">Yes</label><br>      
-                    </td>
-                    <td>
-                        <input type="radio" id="omf_no" name="omf" value="omf_no" checked>
-                        <label for="target">No</label><br>      
-                    </td>
-                </tr>                                                                 
-                <tr>
-                    <td>Data file path(For multiple separate by comma)</td>
-                    <td>
-                        <input type="text" id="df_p_name" value="+DATA">
-                    </td>
-                    <td>
-                        <input type="text" id="df_s_name" value="+DATADG">
-                    </td>
-                </tr>
-                <tr>
-                    <td>Log file path(For multiple separate by comma)</td>
-                    <td>
-                        <input type="text" id="lf_p_name" value="/u01/prd">
-                    </td>
-                    <td>
-                        <input type="text" id="lf_s_name" value="+FRA">
-                    </td>
-                </tr>
-                <tr>
-                    <td>Control file location on destination(For multiple separate by comma)</td>
-                    <td>
-                        <input type="text" id="cf_s_name" value="/usr/data/control01.ctl">
-                    </td>
-                </tr>
-                
-                <tr id="l_OH_name">
-                    <td>ORACLE_HOME path</td>
-                    <td>
-                        <input type="text" id="oh_p_name" value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6">
-                    </td>
-                    <td>
-                        <input type="text" id="oh_s_name" value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6">
-                    </td>
-                </tr>                
-                <!-- <tr>
+        <input
+          type="radio"
+          id="active_duplicate"
+          name="plan"
+          value="duplicate"
+          checked
+        />
+        <label for="active_duplicate_q_l">Run Active Duplicate</label><br />
+        <input
+          type="radio"
+          id="backup_duplicate"
+          name="plan"
+          value="duplicate"
+        />
+        <label for="backup_duplicate">Run Backup based Duplicate</label><br />
+        <!-- <input type="radio" id="stby" name="plan" value="standby"> -->
+        <label for="standby">standby or clone</label><br />
+        <!-- <div id="which_duplicate"> -->
+        <input
+          type="radio"
+          id="standby"
+          name="dup"
+          value="Active"
+          onchange="change_db_name(this)"
+        />
+        <label for="standby">Create a Standby</label><br />
+        <input
+          type="radio"
+          id="clone"
+          name="dup"
+          value="Backup"
+          checked
+          onchange="change_db_name(this)"
+        />
+        <label for="standby">Clone a database</label><br />
+        <!-- </div> -->
+      </div>
+      <div class="grid-item">
+        Provide database details:
+
+        <table style="width: 100%">
+          <tr>
+            <th>Property</th>
+            <th>Source(target)</th>
+            <th>Destination(auxiliary)</th>
+          </tr>
+          <tr>
+            <td>DB_NAME</td>
+
+            <td>
+              <input type="text" id="db_p_name" value="chicago" />
+            </td>
+            <td>
+              <input type="text" id="db_s_name" value="chicago" />
+            </td>
+          </tr>
+          <tr id="l_db_u_name">
+            <td>DB_UNIQUE_NAME</td>
+            <td>
+              <input type="text" id="db_pu_name" value="chicago" />
+            </td>
+            <td>
+              <input type="text" id="db_su_name" value="boston" />
+            </td>
+          </tr>
+          <tr id="l_host_name">
+            <td>HOST</td>
+            <td>
+              <input type="text" id="host_p_name" value="primary.oracle.com" />
+            </td>
+            <td>
+              <input type="text" id="host_s_name" value="aux.oracle.com" />
+            </td>
+          </tr>
+          <tr id="l_port_name">
+            <td>PORT</td>
+            <td>
+              <input type="text" id="port_p_name" value="1521" />
+            </td>
+            <td>
+              <input type="text" id="port_s_name" value="1521" />
+            </td>
+          </tr>
+          <tr id="l_domain_name">
+            <td>DB DOMAIN</td>
+            <td>
+              <input type="text" id="domain_p_name" value="" />
+            </td>
+            <td>
+              <input type="text" id="domain_s_name" value="" />
+            </td>
+          </tr>
+
+          <tr id="is_nofilename">
+            <td>
+              Is the file structure same on source and target?
+              <div class="myDIV">
+              <img src="help_512x512.png" class="myDIV" />
+              <span class="hide">
+                For eg: all data files in primary are on /oracle/oradata and
+                they will be the same on standby
+              </span>
+            </div>
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="nofilename_yes"
+                name="nofilename"
+                value="nofilenamecheck"
+                checked
+                onchange="nofilenamecheck(this)"
+              />
+              <label for="target">Yes</label><br />
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="nofilename_no"
+                name="nofilename"
+                value="nofilenamecheck_no"
+                onchange="nofilenamecheck(this)"
+              />
+              <label for="target">No</label><br />
+            </td>
+          </tr>
+          <tr id="is_setnewname">
+            <td>Are all the datafiles in one mount point on destination?
+                <div class="myDIV">
+                <img src="help_512x512.png" class="myDIV" />
+                <span class="hide">
+                  For eg: all data files in standby are going to be on  +DATADG                  
+                </span> 
+                </div>
+              </td>
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="setnewname_yes"
+                name="setnewname"
+                value="setnewname"
+              />
+              <label for="target">Yes</label><br />
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="setnewname_no"
+                name="setnewname"
+                value="setnewname_no"
+                checked
+              />
+              <label for="target">No</label><br />
+            </td>
+          </tr>
+          <tr id="is_omf_stby">
+            <td>Are you using OMF on destination?
+                <div class="myDIV">
+                    <img src="help_512x512.png" class="myDIV" />
+                    <span class="hide">
+                      For eg: all data files in standby are going using OMF                  
+                    </span> 
+            </td>
+            <td>
+              <input type="radio" id="omf_yes" name="omf" value="omf" />
+              <label for="target">Yes</label><br />
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="omf_no"
+                name="omf"
+                value="omf_no"
+                checked
+              />
+              <label for="target">No</label><br />
+            </td>
+          </tr>
+          <tr>
+            <td>Data file path(For multiple separate by comma)</td>
+            <td>
+              <input type="text" id="df_p_name" value="+DATA" />
+            </td>
+            <td>
+              <input type="text" id="df_s_name" value="+DATADG" />
+            </td>
+          </tr>
+          <tr>
+            <td>Log file path(For multiple separate by comma)</td>
+            <td>
+              <input type="text" id="lf_p_name" value="/u01/prd" />
+            </td>
+            <td>
+              <input type="text" id="lf_s_name" value="+FRA" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Control file location on destination(For multiple separate by
+              comma)
+            </td>
+            <td>
+              <input
+                type="text"
+                id="cf_s_name"
+                value="/usr/data/control01.ctl"
+              />
+            </td>
+          </tr>
+
+          <tr id="l_OH_name">
+            <td>ORACLE_HOME path</td>
+            <td>
+              <input
+                type="text"
+                id="oh_p_name"
+                value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                id="oh_s_name"
+                value="/refresh/home/app/19.3.0.0/oracle/product/19.3.0.0/dbhome_6"
+              />
+            </td>
+          </tr>
+          <!-- <tr>
                     <td>Operating System</td>
                     <td>
                         <input type="text" id="os_p_name" value="Linux">
@@ -180,240 +274,542 @@
                           </select>
                     </td>
                 </tr> -->
-                <tr id="target">
-                    <td>Can you connect to target?</td>
-                    <td>
-                        <input type="radio" id="target_yes" name="target" value="target" onchange="isTargetEnabled(this)">
-                        <label for="target">Yes</label><br>      
-                    </td>
-                    <td>
-                        <input type="radio" id="target_no" name="target" value="notarget" checked onchange="isTargetEnabled(this)">
-                        <label for="target">No</label><br>      
-                    </td>
-                </tr>
-                 <tr id="catalog">
-                    <td>Are you using catalog?</td>
-                    <td>
-                        <input type="radio" id="catalog_yes" name="catalog" value="catalog">
-                        <label for="catalog">Yes</label><br>      
-                    </td>
-                    <td>
-                        <input type="radio" id="catalog_no" name="catalog" value="nocatalog" checked>
-                        <label for="catalog">No</label><br>      
-                    </td>
-                </tr>
+          <tr id="target">
+            <td>Can you connect to target?
+                <div class="myDIV">
+                    <img src="help_512x512.png" class="myDIV" />
+                    <span class="hide">
+                      Connecting to the target is not required if backups are available on disk                  
+                    </span> 
+                </div>
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="target_yes"
+                name="target"
+                value="target"
+                onchange="isTargetEnabled(this)"
+              />
+              <label for="target">Yes</label><br />
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="target_no"
+                name="target"
+                value="notarget"
+                checked
+                onchange="isTargetEnabled(this)"
+              />
+              <label for="target">No</label><br />
+            </td>
+          </tr>
+          <tr id="catalog">
+            <td>Are you using catalog?</td>
+            <td>
+              <input
+                type="radio"
+                id="catalog_yes"
+                name="catalog"
+                value="catalog"
+              />
+              <label for="catalog">Yes</label><br />
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="catalog_no"
+                name="catalog"
+                value="nocatalog"
+                checked
+              />
+              <label for="catalog">No</label><br />
+            </td>
+          </tr>
 
-                <tr id="bkp_location">
-                    <td>Are you backups on tape or disk</td>
-                    <td>
-                        <input type="radio" id="disk" name="bkp_location" value="disk" checked>
-                        <label for="bkp_location">disk</label><br>                            
-                    </td>
-                    <td>
-                        <input type="radio" id="tape" name="bkp_location" value="tape">
-                        <label for="tape">Tape</label><br>
-                    </td>
-                </tr>
-                <tr id="set_until">
-                    <td>set until?</td>
-                    <td>
-                        <input type="radio" id="no_set_until" name="set_until" value="no">
-                        <label for="no_set_until">No</label><br>
-                    </td>
-                    <td>
-                        <input type="radio" id="set_until_time" name="set_until" value="Yes" checked>
-                        <input type="datetime-local" id="until_time" value="2018-06-12T19:30">
-                        <label for="time">Time</label>
-                    </td>
-                    <td>
-                        <input type="radio" id="set_until_scn" name="set_until" value="scn">
-                        <input type="text" id="until_scn" value="123456">
-                        <label for="SCN">SCN</label>
-                    </td>                        
-                    <td>
-                        <input type="radio" id="set_until_logseq" name="set_until" value="seq">
-                        <input type="text" id="until_log" value="3456">
-                        <label for="log_seq">log sequence</label>
-                    </td>
-                </tr>
+          <tr id="bkp_location">
+            <td>Are you backups on tape or disk</td>
+            <td>
+              <input
+                type="radio"
+                id="disk"
+                name="bkp_location"
+                value="disk"
+                checked
+              />
+              <label for="bkp_location">disk</label><br />
+            </td>
+            <td>
+              <input type="radio" id="tape" name="bkp_location" value="tape" />
+              <label for="tape">Tape</label><br />
+            </td>
+          </tr>
+          <tr id="set_until">
+            <td>set until?
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="no_set_until"
+                name="set_until"
+                value="no"
+              />
+              <label for="no_set_until">No
+                <div class="myDIV">
+                    <img src="help_512x512.png" class="myDIV" />
+                    <span class="hide">
+                      How to use set until?
+                      None: if you are using backup location                   
+                    </span> 
+              </label><br />
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="set_until_time"
+                name="set_until"
+                value="Yes"
+                checked
+              />
+              <input
+                type="datetime-local"
+                id="until_time"
+                value="2018-06-12T19:30"
+              />
+              <label for="time">Time
+                <div class="myDIV">
+                    <img src="help_512x512.png" class="myDIV" />
+                    <span class="hide">
+                      How to use set until?
+                      until time: Use time after the last backup is completed                  
+                    </span> 
+              </label>
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="set_until_scn"
+                name="set_until"
+                value="scn"
+              />
+              <input type="text" id="until_scn" value="123456" />
+              <label for="SCN">SCN
+                <div class="myDIV">
+                    <img src="help_512x512.png" class="myDIV" />
+                    <span class="hide">
+                      How to use set until?
+                      scn: RMAN> list backup; //pick the scn of the last available archive log                 
+                    </span> 
+              </label>
+            </td>
+            <td>
+              <input
+                type="radio"
+                id="set_until_logseq"
+                name="set_until"
+                value="seq"
+              />
+              <input type="text" id="until_log" value="3456" />
+              <label for="log_seq">log sequence
+                <div class="myDIV">
+                    <img src="help_512x512.png" class="myDIV" />
+                    <span class="hide">
+                      How to use set until?
+                      log seq: RMAN> list backup; //pick the scn of the last available archive log seq                   
+                    </span> 
+              </label>
+            </td>
+          </tr>
 
-           
-                <tr>
-                    <td>
-                        <button type="button" id="gen_instructions" onclick="gen_instruction()">Generate Instructions</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
+          <tr>
+            <td>
+              <button
+                type="button"
+                id="gen_instructions"
+                onclick="gen_instruction()"
+              >
+                Generate Instructions
+              </button>
+            </td>
+          </tr>
+        </table>
+      </div>
 
+      <div id="active_duplicate_div" class="grid-item">
+        Step 1: Create auxiliary pfile<br />
+        <textarea id="pfile" name="message" rows="8" cols="90"></textarea>
+        <br />Step 2: copy the password File<br />
+        <textarea id="pwdfile" name="message" rows="8" cols="90"> </textarea>
+        <br />Step 3: Nomount the auxiliary instance using pfile<br />
+        <textarea id="startup_nomount" name="message" rows="8" cols="90">
+        </textarea>
+        <br />Step 4a: Add the below listener entry to listener.ora in
+        auxiliary<br />
+        <textarea id="listener" name="message" rows="15" cols="90"> </textarea>
+        <br />Step 4b: Add the below tns entries to tnsnames.ora in primary and
+        auxiliary<br />
+        <textarea id="tns" name="message" rows="15" cols="90"> </textarea>
+        <br />Step 5: Verify rman connectivity<br />
+        <textarea id="rman_connectivity" name="message" rows="8" cols="90">
+        </textarea>
+        <br />Step 6: Create duplicate cmd File<br />
+        <textarea id="duplicate_cmd" name="message" rows="15" cols="90">
+        </textarea>
+        <br />Step 7: Run duplicate<br />
+        <textarea id="run_active_duplicate" name="message" rows="15" cols="90">
+        </textarea>
+        <br />Step 8: Monitor<br />
+        <textarea
+          id="monitor_active_duplicate"
+          name="message"
+          rows="15"
+          cols="90"
+        >
+        </textarea>
+      </div>
+      <div id="active_duplicate_standby_div" class="grid-item">
+        <br />Step 1: Add standby redo logs on primary database<br />
+        <textarea id="srl_ad_stby" name="message" rows="8" cols="90">
+        </textarea>
+        <br />Step 2: Create auxiliary pfile<br />
+        <textarea
+          id="pfile_ad_stby"
+          name="message"
+          rows="8"
+          cols="90"
+        ></textarea>
+        <br />Step 3: copy the password File<br />
+        <textarea id="pwdfile_ad_stby" name="message" rows="8" cols="90">
+        </textarea>
+        <br />Step 4: Nomount the auxiliary instance using pfile<br />
+        <textarea
+          id="startup_nomount_ad_stby"
+          name="message"
+          rows="8"
+          cols="90"
+        >
+        </textarea>
+        <br />Step 5a: Add the below listener entry to listener.ora in
+        auxiliary<br />
+        <textarea id="listener_ad_stby" name="message" rows="15" cols="90">
+        </textarea>
+        <br />Step 5b: Add the below tns entries to tnsnames.ora in primary and
+        auxiliary<br />
+        <textarea id="tns_ad_stby" name="message" rows="15" cols="90">
+        </textarea>
+        <br />Step 6: Verify rman connectivity<br />
+        <textarea
+          id="rman_connectivity_ad_stby"
+          name="message"
+          rows="8"
+          cols="90"
+        >
+        </textarea>
+        <br />Step 7: Create duplicate cmd File<br />
+        <textarea id="duplicate_cmd_ad_stby" name="message" rows="15" cols="90">
+        </textarea>
+        <br />Step 8: Run duplicate<br />
+        <textarea
+          id="run_active_duplicate_ad_stby"
+          name="message"
+          rows="15"
+          cols="90"
+        >
+        </textarea>
+        <br />Step 9: Monitor<br />
+        <textarea
+          id="monitor_active_duplicate_ad_stby"
+          name="message"
+          rows="15"
+          cols="90"
+        >
+        </textarea>
+        <br />Step 10: Configure DG Broker<br />
+        <textarea
+          id="broker_active_duplicate_ad_stby"
+          name="message"
+          rows="15"
+          cols="90"
+        >
+        </textarea>
+        <br />Step 11: Verify DG config<br />
+        <textarea
+          id="verify_active_duplicate_ad_stby"
+          name="message"
+          rows="15"
+          cols="90"
+        >
+        </textarea>
+      </div>
+      <div id="backup_duplicate_div" class="grid-item">
+        <h1>Backup based duplicate</h1>
 
-        <div id="active_duplicate_div" class="grid-item">
-           
-            Step 1: Create auxiliary pfile<br>
-            <textarea id="pfile" name="message" rows="8" cols="90"></textarea>
-            <br>Step 2: copy the password File<br>
-            <textarea id="pwdfile" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 3: Nomount the auxiliary instance using pfile<br>
-            <textarea id="startup_nomount" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 4a: Add the below listener entry to listener.ora in auxiliary<br>
-            <textarea id="listener" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 4b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
-            <textarea id="tns" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 5: Verify rman connectivity<br>
-            <textarea id="rman_connectivity" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 6: Create duplicate cmd File<br>
-            <textarea id="duplicate_cmd" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 7: Run duplicate<br>
-            <textarea id="run_active_duplicate" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 8: Monitor<br>
-            <textarea id="monitor_active_duplicate" name="message" rows="15" cols="90"> </textarea>
-
-        </div>  
-        <div id="active_duplicate_standby_div" class="grid-item">
-           
-            <br>Step 1: Add standby redo logs on primary database<br>
-            <textarea id="srl_ad_stby" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 2: Create auxiliary pfile<br>
-            <textarea id="pfile_ad_stby" name="message" rows="8" cols="90"></textarea>
-            <br>Step 3: copy the password File<br>
-            <textarea id="pwdfile_ad_stby" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 4: Nomount the auxiliary instance using pfile<br>
-            <textarea id="startup_nomount_ad_stby" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 5a: Add the below listener entry to listener.ora in auxiliary<br>
-            <textarea id="listener_ad_stby" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 5b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
-            <textarea id="tns_ad_stby" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 6: Verify rman connectivity<br>
-            <textarea id="rman_connectivity_ad_stby" name="message" rows="8" cols="90"> </textarea>
-            <br>Step 7: Create duplicate cmd File<br>
-            <textarea id="duplicate_cmd_ad_stby" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 8: Run duplicate<br>
-            <textarea id="run_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 9: Monitor<br>
-            <textarea id="monitor_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 10: Configure DG Broker<br>
-            <textarea id="broker_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
-            <br>Step 11: Verify DG config<br>
-            <textarea id="verify_active_duplicate_ad_stby" name="message" rows="15" cols="90"> </textarea>
-
-        </div>  
-        <div id="backup_duplicate_div" class="grid-item">
-            <h1> Backup based duplicate</h1>
-            
-            <div id="using_nocatalog_notarget">
-                using backup location no catalog no target<br>                
-                <br>Step 1: Take backup in primary database<br>
-                <textarea id="bkp_primary_db_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 2: Move backup pieces<br>
-                <textarea id="move_backup_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <!-- <br>Step 3: Copy password file from primary to aux<br>
+        <div id="using_nocatalog_notarget">
+          using backup location no catalog no target<br />
+          <br />Step 1: Take backup in primary database<br />
+          <textarea
+            id="bkp_primary_db_ubkploc"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 2: Move backup pieces<br />
+          <textarea
+            id="move_backup_ubkploc"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <br>Step 3: Copy password file from primary to aux<br>
                 <textarea id="copy_pwd_file_ubkploc" name="message" rows="8" cols="90"></textarea> -->
-                <br>Step 3: Create pfile with only db_name parameter<br>
-                <textarea id="create_pfile_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 4: Startup Nomount<br>
-                <textarea id="startup_nomount_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 5: Create duplicate cmd File<br>
-                <textarea id="duplicate_cmd_ubkploc" name="message" rows="8" cols="90"></textarea>
-                <br>Step 6: Run duplicate<br>
-                <textarea id="run_ubkploc" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 7: Monitor<br>
-                <textarea id="monitor_ubkploc" name="message" rows="15" cols="90"> </textarea>
-            </div>
-            <div id="using_catalog_notarget">
-                using catalog but no target
-                <br>Step 1: Make sure you have backups on primary<br>
-                <textarea id="bkp_primary_db_ucatnotar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 2: Move backup pieces<br>
-                <textarea id="move_backup_ucatnotar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 3: Create pfile<br>
-                <textarea id="create_pfile_ucatnotar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 4: Startup Nomount<br>
-                <textarea id="startup_nomount_ucatnotar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 5: Create duplicate cmd File<br>
-                <textarea id="duplicate_cmd_ucatnotar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 6: Run duplicate<br>
-                <textarea id="run_ucatnotar" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 7: Monitor<br>
-                <textarea id="monitor_ucatnotar" name="message" rows="15" cols="90"> </textarea>
-            </div>
-            <div id="using_target">
-                using target
-                <br>Step 1: Make sure you have backups on primary<br>
-                <textarea id="bkp_primary_db_usingtar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 2: Move backup pieces<br>
-                <textarea id="move_backup_usingtar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 3: Copy password file from primary to aux<br>
-                <textarea id="copy_pwd_file_usingtar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 4: Create pfile with only db_name parameter<br>
-                <textarea id="create_pfile_usingtar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 4a: Add the below listener entry to listener.ora in auxiliary<br>
-                <textarea id="listener_usingtar" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 4b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
-                <textarea id="tns_usingtar" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 5: Startup nomount<br>
-                <textarea id="startup_nomount_usingtar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 6: Verify rman connectivity<br>
-                <textarea id="rman_connectivity_usingtar" name="message" rows="8" cols="90"> </textarea>
-                <br>Step 7: Create duplicate cmd File<br>
-                <textarea id="duplicate_cmd_usingtar" name="message" rows="8" cols="90"></textarea>
-                <br>Step 8: Run duplicate<br>
-                <textarea id="run_usingtar" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 9: Monitor<br>
-                <textarea id="monitor_usingtar" name="message" rows="15" cols="90"> </textarea>
-            </div>
-            <div id="create_standby_using_bkp">
-                create standby using bkp
-                <br>Step 1: Add standby redo logs on primary database<br>
-                 <textarea id="srl_bkp_stby" name="message" rows="8" cols="90"> </textarea>
-                <br>Step 2: Make sure you have backups on primary<br>
-                <textarea id="bkp_primary_stby" name="message" rows="8" cols="90"></textarea>
-                <!-- <p id="bkp_primary_stby"></p> -->
-                <br>Step 3: Move backup pieces<br>
-                <textarea id="move_backup_stby" name="message" rows="8" cols="90"></textarea>
-                <!-- <p id="move_backup_stby"></p> -->
-                <br>Step 4: Copy password file from primary to aux<br>
-                <textarea id="copy_pwd_file_stby" name="message" rows="8" cols="90"></textarea>
-                <!-- <p id="copy_pwd_file_stby"></p> -->
-                <br>Step 5: Create pfile with only db_name parameter<br>
-                <textarea id="create_pfile_stby" name="message" rows="8" cols="90"></textarea>
-                <!-- <p id="create_pfile_stby"></p> -->
-                <br>Step 6a: Add the below listener entry to listener.ora in auxiliary<br>
-                <textarea id="listener_stby" name="message" rows="15" cols="90"> </textarea>
-                <!-- <p id="listener_stby"></p> -->
-                <br>Step 6b: Add the below tns entries to tnsnames.ora in primary and auxiliary<br>
-                <textarea id="tns_stby" name="message" rows="15" cols="90"> </textarea>
-                <!-- <p id="tns_stby"></p> -->
-                <br>Step 7: Verify rman connectivity<br>
-                <textarea id="rman_connectivity_stby" name="message" rows="8" cols="90"> </textarea>
-                <!-- <p id="rman_connectivity_stby"></p> -->
-                <br>Step 8: Startup Nomount<br>
-                <textarea id="startup_nomount_stby" name="message" rows="8" cols="90"></textarea>
-                <!-- <p id="startup_nomount_stby"></p> -->
-                <br>Step 9: Create duplicate cmd File<br>
-                <textarea id="duplicate_cmd_stby" name="message" rows="8" cols="90"></textarea>
-                <!-- <p id="duplicate_cmd_stby"></p> -->
-                <br>Step 10: Run duplicate<br>
-                <textarea id="run_stby" name="message" rows="15" cols="90"> </textarea>
-                <!-- <p id="run_stby"></p> -->
-                <br>Step 11: Monitor<br>
-                <textarea id="monitor_stby" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 12: Configure DG Broker<br>
-                <textarea id="broker_active_duplicate_bkp_stby" name="message" rows="15" cols="90"> </textarea>
-                <br>Step 13: Verify DG config<br>
-                <textarea id="verify_active_duplicate_bkp_stby" name="message" rows="15" cols="90"> </textarea>
-    
-                <!-- <p id="monitor_stby"></p> -->
-            </div>
+          <br />Step 3: Create pfile with only db_name parameter<br />
+          <textarea
+            id="create_pfile_ubkploc"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 4: Startup Nomount<br />
+          <textarea
+            id="startup_nomount_ubkploc"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 5: Create duplicate cmd File<br />
+          <textarea
+            id="duplicate_cmd_ubkploc"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 6: Run duplicate<br />
+          <textarea id="run_ubkploc" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 7: Monitor<br />
+          <textarea id="monitor_ubkploc" name="message" rows="15" cols="90">
+          </textarea>
         </div>
-        <div class="grid-item" id="error">
-            <textarea id="error_text" rows="15" cols="90"></textarea>
-            <!-- <p id="error_text"></p> -->
+        <div id="using_catalog_notarget">
+          using catalog but no target
+          <br />Step 1: Make sure you have backups on primary<br />
+          <textarea
+            id="bkp_primary_db_ucatnotar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 2: Move backup pieces<br />
+          <textarea
+            id="move_backup_ucatnotar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 3: Create pfile<br />
+          <textarea
+            id="create_pfile_ucatnotar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 4: Startup Nomount<br />
+          <textarea
+            id="startup_nomount_ucatnotar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 5: Create duplicate cmd File<br />
+          <textarea
+            id="duplicate_cmd_ucatnotar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 6: Run duplicate<br />
+          <textarea id="run_ucatnotar" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 7: Monitor<br />
+          <textarea id="monitor_ucatnotar" name="message" rows="15" cols="90">
+          </textarea>
         </div>
-        <!-- <div class="grid-item">6</div>  
+        <div id="using_target">
+          using target
+          <br />Step 1: Make sure you have backups on primary<br />
+          <textarea
+            id="bkp_primary_db_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 2: Move backup pieces<br />
+          <textarea
+            id="move_backup_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 3: Copy password file from primary to aux<br />
+          <textarea
+            id="copy_pwd_file_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 4: Create pfile with only db_name parameter<br />
+          <textarea
+            id="create_pfile_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 4a: Add the below listener entry to listener.ora in
+          auxiliary<br />
+          <textarea id="listener_usingtar" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 4b: Add the below tns entries to tnsnames.ora in primary
+          and auxiliary<br />
+          <textarea id="tns_usingtar" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 5: Startup nomount<br />
+          <textarea
+            id="startup_nomount_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 6: Verify rman connectivity<br />
+          <textarea
+            id="rman_connectivity_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          >
+          </textarea>
+          <br />Step 7: Create duplicate cmd File<br />
+          <textarea
+            id="duplicate_cmd_usingtar"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <br />Step 8: Run duplicate<br />
+          <textarea id="run_usingtar" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 9: Monitor<br />
+          <textarea id="monitor_usingtar" name="message" rows="15" cols="90">
+          </textarea>
+        </div>
+        <div id="create_standby_using_bkp">
+          create standby using bkp
+          <br />Step 1: Add standby redo logs on primary database<br />
+          <textarea id="srl_bkp_stby" name="message" rows="8" cols="90">
+          </textarea>
+          <br />Step 2: Make sure you have backups on primary<br />
+          <textarea
+            id="bkp_primary_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="bkp_primary_stby"></p> -->
+          <br />Step 3: Move backup pieces<br />
+          <textarea
+            id="move_backup_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="move_backup_stby"></p> -->
+          <br />Step 4: Copy password file from primary to aux<br />
+          <textarea
+            id="copy_pwd_file_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="copy_pwd_file_stby"></p> -->
+          <br />Step 5: Create pfile with only db_name parameter<br />
+          <textarea
+            id="create_pfile_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="create_pfile_stby"></p> -->
+          <br />Step 6a: Add the below listener entry to listener.ora in
+          auxiliary<br />
+          <textarea id="listener_stby" name="message" rows="15" cols="90">
+          </textarea>
+          <!-- <p id="listener_stby"></p> -->
+          <br />Step 6b: Add the below tns entries to tnsnames.ora in primary
+          and auxiliary<br />
+          <textarea id="tns_stby" name="message" rows="15" cols="90">
+          </textarea>
+          <!-- <p id="tns_stby"></p> -->
+          <br />Step 7: Verify rman connectivity<br />
+          <textarea
+            id="rman_connectivity_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          >
+          </textarea>
+          <!-- <p id="rman_connectivity_stby"></p> -->
+          <br />Step 8: Startup Nomount<br />
+          <textarea
+            id="startup_nomount_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="startup_nomount_stby"></p> -->
+          <br />Step 9: Create duplicate cmd File<br />
+          <textarea
+            id="duplicate_cmd_stby"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="duplicate_cmd_stby"></p> -->
+          <br />Step 10: Run duplicate<br />
+          <textarea id="run_stby" name="message" rows="15" cols="90">
+          </textarea>
+          <!-- <p id="run_stby"></p> -->
+          <br />Step 11: Monitor<br />
+          <textarea id="monitor_stby" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 12: Configure DG Broker<br />
+          <textarea
+            id="broker_active_duplicate_bkp_stby"
+            name="message"
+            rows="15"
+            cols="90"
+          >
+          </textarea>
+          <br />Step 13: Verify DG config<br />
+          <textarea
+            id="verify_active_duplicate_bkp_stby"
+            name="message"
+            rows="15"
+            cols="90"
+          >
+          </textarea>
+
+          <!-- <p id="monitor_stby"></p> -->
+        </div>
+      </div>
+      <div class="grid-item" id="error">
+        <textarea id="error_text" rows="15" cols="90"></textarea>
+        <!-- <p id="error_text"></p> -->
+      </div>
+      <!-- <div class="grid-item">6</div>  
         <div class="grid-item">7</div>
         <div class="grid-item">8</div>
         <div class="grid-item">9</div>   -->
-      </div>
+    </div>
     <script type="text/javascript" src="script.js"></script>
-</body>
+  </body>
 </html>

@@ -1,20 +1,71 @@
 .grid-container {
-    display: grid;
-    grid-template-columns: auto;
-    background-color: #2196F3;
-    padding: 10px;
-  }
-  .grid-item-1 {
-    background-color: rgba(255, 255, 255, 0.952);
-    border: 1px solid rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    font-size: 30px;
-    text-align: left;
-  }
-  .grid-item {
-    background-color: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    font-size: 30px;
-    text-align: left;
-  }
+  display: grid;
+  grid-template-columns: auto;
+  background-color: #2196f3;
+  padding: 10px;
+}
+.grid-item-1 {
+  background-color: rgba(255, 255, 255, 0.952);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  font-size: 30px;
+  text-align: left;
+}
+.grid-item {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  font-size: 30px;
+  text-align: left;
+}
+
+/* .myDIV {
+  width: 20px;
+  height: auto;
+} */
+
+/* .hide {
+  display: none;
+}
+
+.myDIV:hover + .hide {
+  display: block;
+  color: green;
+} */
+
+.myDIV {
+  width: 20px;
+  height: auto;
+  position: relative;
+  display: inline-block;
+  /* border-bottom: 1px dotted black; */
+}
+.myDIV .hide {
+  visibility: hidden;
+  width: 500px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -60px;
+}
+
+.myDIV .hide::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+
+.myDIV:hover .hide {
+  visibility: visible;
+}
