@@ -240,7 +240,12 @@ function create_pfile() {
     pfile_text.push(`init${standby_db_unique_name}.ora\n`);
     pfile_text.push(`------------------------------------\n`);
     pfile_text.push(`DB_NAME=${standby_db_name}\n`);
-    pfile_text.push(`DB_UNIQUE_NAME=${standby_db_unique_name}\n`);
+    pfile_text.push(`DB_UNIQUE_NAME=${standby_db_unique_name}`);
+  }
+  if (isActiveDuplicate.checked) {
+    pfile_text.push(
+      `\nif your source database is multitenant add the below parameter: \nenable_pluggable_database=true\n`
+    );
   }
   return pfile_text;
 }
@@ -252,6 +257,11 @@ function create_omf_pfile() {
   pfile_text.push(`DB_NAME=${standby_db_name}\n`);
   pfile_text.push(`db_create_file_dest=${standby_df_path_name}\n`);
   pfile_text.push(`DB_CREATE_ONLINE_LOG_DEST=${standby_lf_path_name}`);
+  if (isActiveDuplicate.checked) {
+    pfile_text.push(
+      `if your standby is multitenant add the below parameter \nenable_pluggable_database=true\n`
+    );
+  }
   return pfile_text;
 }
 function create_pwdfile() {
@@ -370,8 +380,8 @@ function create_duplicate_cmd() {
   duplicate_cmd.push(
     `connect target sys/<pwd>@${primary_db_unique_name} \n connect auxiliary sys/<pwd>@${standby_db_unique_name} \n`
   );
-  duplicate_cmd.push(`run { \n`);
   duplicate_cmd.push(`set echo on;\n`);
+  duplicate_cmd.push(`run { \n`);
   //check if standby or clone
   if (isStandby.checked) {
     duplicate_cmd.push(
@@ -490,7 +500,12 @@ function active_duplicate_standby() {
   bkpDiv.style.display = "none";
   activestbydiv.style.display = "block";
   document.getElementById("srl_ad_stby").value = add_srl().join("");
-  document.getElementById("pfile_ad_stby").value = create_pfile().join("");
+  if (omf_yes.checked) {
+    document.getElementById("pfile_ad_stby").value =
+      create_omf_pfile().join("");
+  } else {
+    document.getElementById("pfile_ad_stby").value = create_pfile().join("");
+  }
   document.getElementById("listener_ad_stby").value =
     create_listener().join("");
   document.getElementById("tns_ad_stby").value = create_tns().join("");
@@ -530,8 +545,8 @@ function create_ubkploc_duplicate() {
     `Create a file: rman_duplicate.cmd and enter the below:\n`,
   ];
   duplicate_cmd_ubkploc.push(`connect auxiliary /\n`);
-  duplicate_cmd_ubkploc.push(`run {\n`);
   duplicate_cmd_ubkploc.push(`set echo on;\n`);
+  duplicate_cmd_ubkploc.push(`run {\n`);
   if (setnewname_yes.checked && omf_no.checked && nofilename_no.checked) {
     console.log("WIP");
     duplicate_cmd_ubkploc.push(
@@ -635,8 +650,8 @@ function create_ucatnotar_duplicate() {
   duplicate_cmd_ucatnotar.push(
     `connect auxiliary / catalog <catalog schema>/<password>@<catalog service>\n`
   );
-  duplicate_cmd_ucatnotar.push(`run {\n`);
   duplicate_cmd_ucatnotar.push(`set echo on;\n`);
+  duplicate_cmd_ucatnotar.push(`run {\n`);
   if (disk.checked) {
     duplicate_cmd_ucatnotar.push(`allocate auxiliary channel ch1 type disk;\n`);
   } else {
@@ -746,8 +761,8 @@ function create_using_target_bkp_duplicate() {
     duplicate_cmd_usingtar.push(`connect target sys/<pwd>@<target>\n`);
     duplicate_cmd_usingtar.push(`connect auxiliary /\n`);
   }
-  duplicate_cmd_usingtar.push(`run {\n`);
   duplicate_cmd_usingtar.push(`set echo on;\n`);
+  duplicate_cmd_usingtar.push(`run {\n`);
   if (disk.checked) {
     duplicate_cmd_usingtar.push(`allocate channel ch1 type disk;\n`);
     duplicate_cmd_usingtar.push(`allocate auxiliary channel ch2 type disk;\n`);
@@ -878,8 +893,8 @@ function create_stby_using_bkp_duplicate() {
       duplicate_cmd_usingstby.push(`connect auxiliary /\n`);
     }
   }
-  duplicate_cmd_usingstby.push(`run {\n`);
   duplicate_cmd_usingstby.push(`set echo on;\n`);
+  duplicate_cmd_usingstby.push(`run {\n`);
   duplicate_cmd_usingstby.push(`allocate channel ch1 type disk;\n`);
   if (disk.checked) {
     duplicate_cmd_usingstby.push(`allocate auxiliary channel ch1 type disk;\n`);
