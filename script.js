@@ -79,10 +79,10 @@ function toggle_bkp_elements(toggle) {
   bkp_location.style.display = toggle;
   catalog.style.display = toggle;
   target.style.display = toggle;
-  nofilename.style.display = toggle;
-  setnewname.style.display = toggle;
-  // omf_stby.style.display=toggle;
-  document.getElementById("is_setnewname").style.display = "none";
+  // nofilename.style.display = toggle;
+  // setnewname.style.display = toggle;
+  // // omf_stby.style.display=toggle;
+  // document.getElementById("is_setnewname").style.display = "none";
   //
 }
 
@@ -92,7 +92,11 @@ function toggle_active_elements(toggle) {
   document.getElementById("l_port_name").style.display = toggle;
   document.getElementById("l_OH_name").style.display = toggle;
   document.getElementById("l_domain_name").style.display = toggle;
+  // omf_stby.style.display = toggle;
+  // nofilename.style.display = toggle;
+  // setnewname.style.display = toggle;
   // omf_stby.style.display=toggle;
+  // document.getElementById("is_setnewname").style.display = "block";
 }
 
 //Block on first run
@@ -100,6 +104,9 @@ activeDiv.style.display = "none";
 bkpDiv.style.display = "none";
 activestbydiv.style.display = "none";
 toggle_bkp_elements("none");
+setnewname.style.display = "none";
+omf_stby.style.display = "none";
+document.getElementById("is_setnewname").style.display = "none";
 error_text.style.display = "none";
 
 //Check if backup based duplicate is checked and show html accordingly
@@ -373,6 +380,17 @@ function get_controlfile() {
   }
   return control_array;
 }
+function duplicate_command_check_standby() {
+  if (isStandby.checked) {
+    duplicate_cmd.push(
+      `DUPLICATE TARGET DATABASE\n FOR STANDBY\n FROM ACTIVE DATABASE\n`
+    );
+  } else {
+    duplicate_cmd.push(
+      `DUPLICATE TARGET DATABASE \n TO ${standby_db_unique_name} \n FROM ACTIVE DATABASE\n`
+    );
+  }
+}
 function create_duplicate_cmd() {
   duplicate_cmd = [
     `Create a file: rman_active_duplicate.cmd and enter the below:\n`,
@@ -383,28 +401,61 @@ function create_duplicate_cmd() {
   duplicate_cmd.push(`set echo on;\n`);
   duplicate_cmd.push(`run { \n`);
   //check if standby or clone
-  if (isStandby.checked) {
-    duplicate_cmd.push(
-      `DUPLICATE TARGET DATABASE\n FOR STANDBY\n FROM ACTIVE DATABASE\n`
-    );
-  } else {
-    duplicate_cmd.push(
-      `DUPLICATE TARGET DATABASE \n TO ${standby_db_unique_name} \n FROM ACTIVE DATABASE\n`
-    );
-  }
+
   //using backupset if version 12c &  above
   // console.log(primary_version);
   // if(primary_version === "12.1.0.2" || primary_version==="12.2.0.2" || primary_version==="18.0" || primary_version==="19.0"){
   //     duplicate_cmd.push(`USING BACKUPSET <refer doc# 1987193.1 to know more about this option. You can skip this line too> \n`)
   // }
 
-  if (omf_no.checked) {
+  // if (omf_no.checked) {
+  //   duplicate_cmd.push(`SPFILE\n`);
+  //   duplicate_cmd.push(get_controlfile());
+  //   duplicate_cmd.push(convert_parameters());
+  // }
+  if (nofilename_yes.checked) {
+    duplicate_command_check_standby();
     duplicate_cmd.push(`SPFILE\n`);
-    duplicate_cmd.push(get_controlfile());
-    duplicate_cmd.push(convert_parameters());
+    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
+    duplicate_cmd.push(`nofilenamecheck;\n`);
+    duplicate_cmd.push(`}\n`);
+    return duplicate_cmd;
   }
-  duplicate_cmd.push(`}`);
-  return duplicate_cmd;
+
+  if (setnewname_yes.checked && nofilename_no.checked && omf_no.checked) {
+    duplicate_cmd.push(
+      `set newname for database to '${standby_df_path_name}/%b';\n`
+    );
+    duplicate_command_check_standby();
+    // duplicate_cmd.push(is_until());
+    duplicate_cmd.push(`SPFILE\n`);
+    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}';\n`);
+    duplicate_cmd.push(`}\n`);
+    return duplicate_cmd;
+  }
+  if (omf_yes.checked && nofilename_no.checked) {
+    duplicate_cmd.push(`set newname for database to new;\n`);
+    duplicate_command_check_standby();
+    // duplicate_cmd.push(is_until());
+    duplicate_cmd.push(`SPFILE\n`);
+    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
+    duplicate_cmd.push(
+      `set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`
+    );
+    duplicate_cmd.push(`}`);
+    return duplicate_cmd;
+  }
+  if (omf_no.checked && nofilename_no.checked && setnewname_no.checked) {
+    console.log("running DG convert in active duplicate");
+    duplicate_command_check_standby();
+    duplicate_cmd.push(`SPFILE\n`);
+    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
+    duplicate_cmd.push(convert_parameters());
+    duplicate_cmd.push(`;}`);
+    return duplicate_cmd;
+  }
+  // duplicate_cmd.push(`}`);
+  // return duplicate_cmd;
 }
 
 function run_active_duplicate() {
@@ -1016,10 +1067,13 @@ function create_standby_using_bkp_func() {
 }
 
 function show_error_meesage(msg) {
-  alert(msg);
   error_text.value = msg;
   bkpDiv.style.display = "none";
-  error_text.style.display = "";
+  activeDiv.style.display = "none";
+  activestbydiv.style.display = "none";
+  document.getElementById("error").style.display = "block";
+  error_text.style.display = "block";
+  alert(msg);
 }
 function backup_duplicate() {
   //Throw error is no catalog/target/tape
@@ -1102,6 +1156,13 @@ function gen_instruction() {
   until_time = document.getElementById("until_time").value;
   until_scn = document.getElementById("until_scn").value;
   until_log = document.getElementById("until_log").value;
+
+  if (primary_host_name === standby_host_name) {
+    show_error_meesage(
+      "Please stop using the tool and refer the doc: Using RMAN to Safely Clone a Database onto the Same Storage as the Source Database (Doc ID 2289796.1)"
+    );
+    // alert('')
+  }
 
   if (isActiveDuplicate.checked && isCloneDB.checked) {
     error_text.style.display = "none";
