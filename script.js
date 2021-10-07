@@ -271,11 +271,14 @@ function create_pfile() {
     pfile_text.push(`DB_NAME=${standby_db_name}\n`);
     pfile_text.push(`DB_UNIQUE_NAME=${standby_db_unique_name}`);
   }
-  if (isActiveDuplicate.checked) {
-    pfile_text.push(
-      `\nif your source database is multitenant add the below parameter: \nenable_pluggable_database=true\n`
-    );
-  }
+  // if (isActiveDuplicate.checked) {
+  //   pfile_text.push(
+  //     `\n\nIf your source database is multitenant add the below parameter: \nenable_pluggable_database=true\n`
+  //   );
+  // }
+  pfile_text.push(
+    `\n\nIf your source database is multitenant add the below parameter: \nenable_pluggable_database=true\n`
+  );
   return pfile_text;
 }
 function create_omf_pfile() {
@@ -286,11 +289,14 @@ function create_omf_pfile() {
   pfile_text.push(`DB_NAME=${standby_db_name}\n`);
   pfile_text.push(`db_create_file_dest=${standby_df_path_name}\n`);
   pfile_text.push(`DB_CREATE_ONLINE_LOG_DEST=${standby_lf_path_name}`);
-  if (isActiveDuplicate.checked) {
-    pfile_text.push(
-      `if your standby is multitenant add the below parameter \nenable_pluggable_database=true\n`
-    );
-  }
+  // if (isActiveDuplicate.checked) {
+  //   pfile_text.push(
+  //     `if your standby is multitenant add the below parameter \nenable_pluggable_database=true\n`
+  //   );
+  // }
+  pfile_text.push(
+    `if your standby is multitenant add the below parameter \nenable_pluggable_database=true\n`
+  );
   return pfile_text;
 }
 function create_pwdfile() {
@@ -299,23 +305,23 @@ function create_pwdfile() {
   pwd_file.push(`ls -ltr $ORACLE_HOME/dbs/*pw*${primary_db_unique_name}*\n\n`);
   if (standby_db_name === standby_db_unique_name) {
     pwd_file.push(
-      `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to ORAPWD${standby_db_unique_name}.ora\n\n`
+      `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n\n`
     );
     pwd_file.push(
-      `If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_unique_name}.ora PASSWORD=<password>\n`
+      `If it does not exist, create a password file on target: orapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_unique_name}.ora PASSWORD=<password>\n`
     );
     pwd_file.push(
-      `copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to ORAPWD${standby_db_unique_name}.ora\n`
+      `copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n`
     );
   } else {
     pwd_file.push(
-      `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to ORAPWD${standby_db_name}.ora\n\n`
+      `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_name}.ora\n\n`
     );
     pwd_file.push(
-      `If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_name}.ora PASSWORD=<password>\n`
+      `If it does not exist, create a password file on target: orapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_name}.ora PASSWORD=<password>\n`
     );
     pwd_file.push(
-      `copy the password file to $ORACLE_HOME/dbs on the destination database and rename it to ORAPWD${standby_db_name}.ora\n`
+      `copy the password file to $ORACLE_HOME/dbs on the destination database and rename it to orapw${standby_db_name}.ora\n`
     );
   }
 
@@ -323,11 +329,11 @@ function create_pwdfile() {
 }
 
 function startup_nomount() {
-  return `export ORACLE_SID=${standby_db_unique_name}\nConnect to sqlplus as sysdba \nSQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`;
+  return `$export ORACLE_SID=${standby_db_unique_name}\n$sqlplus as sysdba \n\nSQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`;
 }
 
 function verify_rman_connectivity() {
-  return `rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nif this fails, check listener and tns\n\nif succeeds, proceed to next step`;
+  return `Please start the listener:\nlsnrctl start\n\nverify tnsping connectivity:\ntnsping ${standby_db_unique_name}\ntnsping ${primary_db_unique_name}\n\nverify rman connectivit:\nrman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nif this fails, check listener and tns\n\nif succeeds, proceed to next step`;
 }
 
 function convert_df_parameters() {
@@ -506,25 +512,30 @@ function create_duplicate_cmd() {
 }
 
 function run_active_duplicate() {
-  run_dup = [`Connect to rman\n`];
+  // run_dup = [`Connect to rman\n`];
+  run_dup = [];
   run_dup.push(
     // `rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} log=/tmp/rman_active_duplicate.log\n`
-    `rman log=/tmp/rman_active_duplicate.log\n`
+    `$rman log=/tmp/rman_active_duplicate.log\n`
   );
   run_dup.push(`RMAN>@rman_active_duplicate.cmd`);
   return run_dup;
 }
 
 function monitor_duplicate() {
-  return `Please monitor the /tmp/<duplicate>.log file to verify successful completion. 
-        If you receive any errors, please follow the doc# 1671431.1 and create an SR with the output`;
+  return `Please monitor the /tmp/<duplicate>.log file to verify successful completion.\n
+  If you receive any errors, capture the diagnostic details on auxiliary outlined in:
+  SRDC - Required Diagnostic Data Collection for RMAN Issues (Doc ID 1671431.1)	
+  and create a service request with the output generated.`;
 }
 function verify_backup() {
-  return `Make sure you have full backups along with archive logs 
-    Please run RMAN> restore preview; to get a list of backups that would be used.\n
-    If not take a backup of spfile and full backup along with archive logs:
-    RMAN> backup spfile;
-    RMAN> backup database plus archivelog;`;
+  // return `Make sure you have full backups along with archive logs
+  //   Please run RMAN> restore preview; to get a list of backups that would be used.\n
+  //   If not take a backup of spfile and full backup along with archive logs:
+  //   RMAN> backup spfile;
+  //   RMAN> backup database plus archivelog;`;
+
+  return `If you are not using an existing backup, backup the database, like:\n\nRMAN> backup spfile format '/<backup location>/clone_spfile_%U';\nRMAN> backup database plus archivelog format '/<backup location>/clone_db_%U';\nRMAN> backup current controlfile format '/<backup location>/clone_cf_%U';\n`;
 }
 function active_duplicate() {
   //  if( isActiveDuplicate.checked && isDuplicate.checked){
@@ -722,8 +733,7 @@ function using_backup_location() {
   document.getElementById("bkp_primary_db_ubkploc").value = verify_backup();
   document.getElementById(
     "move_backup_ubkploc"
-  ).value = `If the duplicate is going to happen on different server, move the backup pieces to a new server using commands like ftp,scp etc.
-    If you are using tape, ensure your media manager is configured on the auxiliary server so it is able to restore the backups from tape`;
+  ).value = `If the clone database will reside on a different server, move the backup pieces to the new (auxiliary) server using an OS command (i.e., ftp, scp, etc).`;
   // document.getElementById("copy_pwd_file_ubkploc").value=create_pwdfile().join("")
   if (omf_yes.checked) {
     document.getElementById("create_pfile_ubkploc").value =
@@ -758,7 +768,7 @@ function create_ucatnotar_duplicate() {
     );
   }
   duplicate_cmd_ucatnotar.push(
-    `// you can allocate multiple channles <please remove this line>\n`
+    `// you can allocate multiple channels <please remove this line>\n`
   );
 
   if (nofilename_yes.checked) {
@@ -993,7 +1003,7 @@ function create_stby_using_bkp_duplicate() {
   }
   if (nofilename_yes.checked) {
     duplicate_cmd_usingstby.push(
-      `// you can allocate multiple channles <please remove this line>\n`
+      `// you can allocate multiple channels <please remove this line>\n`
     );
     duplicate_cmd_usingstby.push(
       `duplicate target database for standby nofilenamecheck dorecover;\n`
@@ -1012,7 +1022,7 @@ function create_stby_using_bkp_duplicate() {
       `set newname for database to '${standby_df_path_name}/%b';\n`
     );
     duplicate_cmd_usingstby.push(
-      `// you can allocate multiple channles <please remove this line>\n`
+      `// you can allocate multiple channels <please remove this line>\n`
     );
     duplicate_cmd_usingstby.push(
       `duplicate target database for standby nofilenamecheck dorecover;\n`
@@ -1028,7 +1038,7 @@ function create_stby_using_bkp_duplicate() {
   if (omf_yes.checked && nofilename_no.checked) {
     duplicate_cmd_usingstby.push(`set newname for database to new;\n`);
     duplicate_cmd_usingstby.push(
-      `// you can allocate multiple channles <please remove this line>\n`
+      `// you can allocate multiple channels <please remove this line>\n`
     );
     duplicate_cmd_usingstby.push(
       `duplicate target database for standby nofilenamecheck dorecover;\n`
@@ -1045,7 +1055,7 @@ function create_stby_using_bkp_duplicate() {
     return duplicate_cmd_usingstby;
   }
   duplicate_cmd_usingstby.push(
-    `// you can allocate multiple channles <please remove this line>\n`
+    `// you can allocate multiple channels <please remove this line>\n`
   );
   duplicate_cmd_usingstby.push(
     `duplicate target database for standby nofilenamecheck dorecover;\n`
@@ -1060,13 +1070,17 @@ function create_stby_using_bkp_duplicate() {
   duplicate_cmd_usingstby.push(`\n;}`);
   return duplicate_cmd_usingstby;
 }
+// function ensure_backups() {
+//   return `If you are not using an existing backup, backup the database, like:\n\nRMAN> backup spfile format '/<backup location>/clone_spfile_%U';\nRMAN> backup database plus archivelog format '/<backup location>/clone_db_%U';\n`;
+// }
 
 function create_standby_using_bkp_func() {
   console.log("Creating standby");
   document.getElementById("srl_bkp_stby").value = add_srl().join("");
-  document.getElementById(
-    "bkp_primary_stby"
-  ).value = `Make sure you have full backups along with archive logs RMAN> list backup;\n\nIf not take a backup of spfile and full backup along with archive logs\n`;
+  // document.getElementById(
+  //   "bkp_primary_stby"
+  // ).value = `Make sure you have full backups along with archive logs RMAN> list backup;\n\nIf not take a backup of spfile and full backup along with archive logs\n`;
+  document.getElementById("bkp_primary_stby").value = verify_backup();
   if (disk.checked) {
     document.getElementById(
       "move_backup_stby"
