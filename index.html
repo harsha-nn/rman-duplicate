@@ -9,6 +9,20 @@
   </head>
   <body>
     <div class="grid-container">
+      <div class="grid-item-1">
+        <h3>Please read the below before proceeding:</h3>
+        <ul>
+          <li>This tool is intended to assist you in compiling the steps needed to duplicate a database with RMAN. No data is stored on any servers.</li>
+          <li>Answer the questions, input the values for your system and click on 'Generate Instructions'.</li>
+          <li>Please click generate instructions each time, you make any change to any input</li>
+          <li>This tool will give you the basics for parameter settings and a sample duplicate command.</li>
+          <li>Review the details returned by the tool completely before relying on them in a production environment.</li>
+          <li>Please use the "Was this document helpful?" section to provide any feedback on the tool.</li>
+          <li>NOTE: In the details below, the user information, names, and environment data used represents fictitious data.<br />
+           Any similarity to actual environments, actual persons, living or dead, is purely coincidental and not intended in any manner.</li>
+        </ul>
+      </div>
+
       <!-- <label>Primary info:</label> -->
       <div class="grid-item-1">
         What are you planning to do? <br />
@@ -109,12 +123,13 @@
 
           <tr id="is_nofilename">
             <td>
-              Is the file structure same on source and target?
+              Will you use the same file structure for<br />
+              datafiles and logfiles between target and auxiliary?
               <div class="myDIV">
               <img src="help_512x512.png" class="myDIV" />
               <span class="hide">
-                For eg: all data files in primary are on /oracle/oradata and
-                they will be the same on standby
+                For eg: all data files in target are on /oracle/oradata and
+                they will be the same location on auxiliary
               </span>
             </div>
             </td>
@@ -141,11 +156,11 @@
             </td>
           </tr>
           <tr id="is_setnewname">
-            <td>Are all the datafiles in one mount point on destination?
+            <td>Are all the datafiles in one mount point on auxiliary?
                 <div class="myDIV">
                 <img src="help_512x512.png" class="myDIV" />
                 <span class="hide">
-                  For eg: all data files in standby are going to be on  +DATADG                  
+                  For eg: all data files in auxiliary are going to be on  +DATADG                  
                 </span> 
                 </div>
               </td>
@@ -171,11 +186,11 @@
             </td>
           </tr>
           <tr id="is_omf_stby">
-            <td>Are you using OMF on destination?
+            <td>Are you using OMF on auxiliary?
                 <div class="myDIV">
                     <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
-                      For eg: all data files in standby are going using OMF                  
+                      For eg: all data files in auxiliary are going using OMF                  
                     </span> 
             </td>
             <td>
@@ -194,7 +209,9 @@
             </td>
           </tr>
           <tr>
-            <td>Data file path(For multiple separate by comma)</td>
+           <tr><td> <p id="convert_hint" style="font-size:20px" >For multiple locations/mount points you must specify equal pairs.<br />
+               I.e., both target(source) and auxiliary (destination) must contain the same number locations separated by comma.</p></td></tr>
+            <td id="df_path">Data file path(For multiple separate by comma)</td>
             <td>
               <input type="text" id="df_p_name" value="+DATA" />
             </td>
@@ -203,7 +220,7 @@
             </td>
           </tr>
           <tr>
-            <td>Log file path(For multiple separate by comma)</td>
+            <td id="lf_path">Log file path(For multiple separate by comma)</td>
             <td>
               <input type="text" id="lf_p_name" value="/u01/prd" />
             </td>
@@ -213,8 +230,15 @@
           </tr>
           <tr>
             <td>
-              Control file location on destination(For multiple separate by
+              Control file location on auxiliary(For multiple separate by
               comma)
+            </td>
+            <td id="cf_p_name_td">
+              <input
+                type="text"
+                id="cf_p_name"
+                value="/usr/data/control01.ctl"
+              />
             </td>
             <td>
               <input

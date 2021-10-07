@@ -108,6 +108,14 @@ setnewname.style.display = "none";
 omf_stby.style.display = "none";
 document.getElementById("is_setnewname").style.display = "none";
 error_text.style.display = "none";
+document.getElementById("cf_p_name").style.display = "none"; //aligns the control file location
+document.getElementById("convert_hint").style.display = "none"; // blocks convert hint
+document.getElementById("df_path").style.display = "none";
+document.getElementById("lf_path").style.display = "none";
+document.getElementById("df_p_name").style.display = "none";
+document.getElementById("df_s_name").style.display = "none";
+document.getElementById("lf_p_name").style.display = "none";
+document.getElementById("lf_s_name").style.display = "none";
 
 //Check if backup based duplicate is checked and show html accordingly
 isBackupDuplicate.addEventListener("click", function () {
@@ -170,9 +178,23 @@ function nofilenamecheck(radio) {
     console.log("in no file name check");
     document.getElementById("is_setnewname").style.display = "";
     document.getElementById("is_omf_stby").style.display = "";
+    document.getElementById("convert_hint").style.display = "";
+    document.getElementById("df_path").style.display = "";
+    document.getElementById("lf_path").style.display = "";
+    document.getElementById("df_p_name").style.display = "";
+    document.getElementById("df_s_name").style.display = "";
+    document.getElementById("lf_p_name").style.display = "";
+    document.getElementById("lf_s_name").style.display = "";
   } else {
     document.getElementById("is_setnewname").style.display = "none";
     document.getElementById("is_omf_stby").style.display = "none";
+    document.getElementById("convert_hint").style.display = "none";
+    document.getElementById("df_path").style.display = "none";
+    document.getElementById("lf_path").style.display = "none";
+    document.getElementById("df_p_name").style.display = "none";
+    document.getElementById("df_s_name").style.display = "none";
+    document.getElementById("lf_p_name").style.display = "none";
+    document.getElementById("lf_s_name").style.display = "none";
   }
 }
 
@@ -274,20 +296,20 @@ function create_omf_pfile() {
 function create_pwdfile() {
   pwd_file = [];
   pwd_file.push(`On the source database check if password file exists:\n`);
-  pwd_file.push(`ls -ltr $ORACLE_HOME/dbs/*pw*${primary_db_unique_name}*\n`);
+  pwd_file.push(`ls -ltr $ORACLE_HOME/dbs/*pw*${primary_db_unique_name}*\n\n`);
   if (standby_db_name === standby_db_unique_name) {
     pwd_file.push(
-      `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`
+      `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to ORAPWD${standby_db_unique_name}.ora\n\n`
     );
     pwd_file.push(
       `If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_unique_name}.ora PASSWORD=<password>\n`
     );
     pwd_file.push(
-      `copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_unique_name}.ora\n`
+      `copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to ORAPWD${standby_db_unique_name}.ora\n`
     );
   } else {
     pwd_file.push(
-      `If exists, copy the password file to $ORACLE_HOME/dbs on the standby and rename it to ORAPWD${standby_db_name}.ora\n`
+      `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to ORAPWD${standby_db_name}.ora\n\n`
     );
     pwd_file.push(
       `If it does not exist, create a password file: orapwd FILE=$ORACLE_HOME/dbs/ORAPWD${primary_db_name}.ora PASSWORD=<password>\n`
@@ -301,61 +323,85 @@ function create_pwdfile() {
 }
 
 function startup_nomount() {
-  return `export ORACLE_SID=${standby_db_unique_name}\nConnect to sqlplus as sysdba \n SQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`;
+  return `export ORACLE_SID=${standby_db_unique_name}\nConnect to sqlplus as sysdba \nSQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`;
 }
 
 function verify_rman_connectivity() {
-  return `rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n if this fails, check listener and tns \n if succeeds, proceed to next step`;
+  return `rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nif this fails, check listener and tns\n\nif succeeds, proceed to next step`;
 }
 
-function convert_parameters() {
+function convert_df_parameters() {
   // check if path variables are arrays
   // check if they are same length
   console.log("Running convert");
   let convert_array = [];
-  if (Array.isArray(standby_df_path_name)) {
-    if (!Array.isArray(standby_df_path_name)) {
-      standby_df_path_name = standby_df_path_name.split();
-    }
-    tempArray = [];
-    for (i = 0; i < primary_df_path_name.length; i++) {
-      if (standby_df_path_name.length == primary_df_path_name.length) {
-        tempArray.push(
-          `"${primary_df_path_name[i]}","${standby_df_path_name[i]}"\n `
-        );
-      } else {
-        tempArray.push(
-          `"${primary_df_path_name[i]}","${standby_df_path_name[0]}"\n `
-        );
+  if (
+    Array.isArray(standby_df_path_name) ||
+    Array.isArray(primary_df_path_name)
+  ) {
+    if (primary_df_path_name.length === standby_df_path_name) {
+      if (!Array.isArray(standby_df_path_name)) {
+        standby_df_path_name = standby_df_path_name.split();
       }
+      tempArray = [];
+      for (i = 0; i < primary_df_path_name.length; i++) {
+        if (standby_df_path_name.length == primary_df_path_name.length) {
+          tempArray.push(
+            `"${primary_df_path_name[i]}","${standby_df_path_name[i]}"\n `
+          );
+        } else {
+          tempArray.push(
+            `"${primary_df_path_name[i]}","${standby_df_path_name[0]}"\n `
+          );
+        }
+      }
+      convert_array.push(`SET DB_FILE_NAME_CONVERT ${tempArray.join(",")}`);
+    } else {
+      // alert("Please enter equal pairs");
+      show_error_meesage(
+        "You must enter equal pairs in datafile and logfile paths"
+      );
     }
-    convert_array.push(`SET DB_FILE_NAME_CONVERT ${tempArray.join(",")}`);
   } else {
     convert_array.push(
-      `SET DB_FILE_NAME_CONVERT "${primary_df_path_name}","${standby_df_path_name}"\n `
+      `SET DB_FILE_NAME_CONVERT "${primary_df_path_name}","${standby_df_path_name}"\n`
     );
   }
-  //LOG file name convert
-  if (Array.isArray(primary_lf_path_name)) {
-    if (!Array.isArray(standby_lf_path_name)) {
-      standby_lf_path_name = standby_lf_path_name.split();
-    }
-    tempArray = [];
-    for (i = 0; i < primary_lf_path_name.length; i++) {
-      if (standby_lf_path_name.length == primary_lf_path_name.length) {
-        tempArray.push(
-          `"${primary_lf_path_name[i]}","${standby_lf_path_name[i]}"\n `
-        );
-      } else {
-        tempArray.push(
-          `"${primary_lf_path_name[i]}","${standby_lf_path_name[0]}"\n `
-        );
+  return convert_array;
+}
+
+function convert_lf_parameters() {
+  let convert_array = [];
+  if (
+    Array.isArray(primary_lf_path_name) ||
+    Array.isArray(primary_lf_path_name)
+  ) {
+    if (primary_lf_path_name.length === standby_lf_path_name.length) {
+      if (!Array.isArray(standby_lf_path_name)) {
+        standby_lf_path_name = standby_lf_path_name.split();
       }
+      tempArray = [];
+      for (i = 0; i < primary_lf_path_name.length; i++) {
+        if (standby_lf_path_name.length == primary_lf_path_name.length) {
+          tempArray.push(
+            `"${primary_lf_path_name[i]}","${standby_lf_path_name[i]}"\n `
+          );
+        } else {
+          tempArray.push(
+            `"${primary_lf_path_name[i]}","${standby_lf_path_name[0]}"\n `
+          );
+        }
+      }
+      convert_array.push(`SET LOG_FILE_NAME_CONVERT ${tempArray.join(",")}`);
+    } else {
+      // alert("Please enter equal pairs");
+      show_error_meesage(
+        "You must enter equal pairs in datafile and logfile paths"
+      );
     }
-    convert_array.push(`SET LOG_FILE_NAME_CONVERT ${tempArray.join(",")}`);
   } else {
     convert_array.push(
-      `SET LOG_FILE_NAME_CONVERT "${primary_lf_path_name}","${standby_lf_path_name}"\n `
+      `SET LOG_FILE_NAME_CONVERT "${primary_lf_path_name}","${standby_lf_path_name}"\n`
     );
   }
   return convert_array;
@@ -383,11 +429,11 @@ function get_controlfile() {
 function duplicate_command_check_standby() {
   if (isStandby.checked) {
     duplicate_cmd.push(
-      `DUPLICATE TARGET DATABASE\n FOR STANDBY\n FROM ACTIVE DATABASE\n`
+      `DUPLICATE TARGET DATABASE\nFOR STANDBY\nFROM ACTIVE DATABASE\n`
     );
   } else {
     duplicate_cmd.push(
-      `DUPLICATE TARGET DATABASE \n TO ${standby_db_unique_name} \n FROM ACTIVE DATABASE\n`
+      `DUPLICATE TARGET DATABASE \nTO ${standby_db_unique_name} \nFROM ACTIVE DATABASE\n`
     );
   }
 }
@@ -396,7 +442,7 @@ function create_duplicate_cmd() {
     `Create a file: rman_active_duplicate.cmd and enter the below:\n`,
   ];
   duplicate_cmd.push(
-    `connect target sys/<pwd>@${primary_db_unique_name} \n connect auxiliary sys/<pwd>@${standby_db_unique_name} \n`
+    `connect target sys/<pwd>@${primary_db_unique_name} \nconnect auxiliary sys/<pwd>@${standby_db_unique_name} \n`
   );
   duplicate_cmd.push(`set echo on;\n`);
   duplicate_cmd.push(`run { \n`);
@@ -416,7 +462,7 @@ function create_duplicate_cmd() {
   if (nofilename_yes.checked) {
     duplicate_command_check_standby();
     duplicate_cmd.push(`SPFILE\n`);
-    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
+    duplicate_cmd.push(get_controlfile());
     duplicate_cmd.push(`nofilenamecheck;\n`);
     duplicate_cmd.push(`}\n`);
     return duplicate_cmd;
@@ -429,8 +475,8 @@ function create_duplicate_cmd() {
     duplicate_command_check_standby();
     // duplicate_cmd.push(is_until());
     duplicate_cmd.push(`SPFILE\n`);
-    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}';\n`);
-    duplicate_cmd.push(`}\n`);
+    duplicate_cmd.push(get_controlfile());
+    duplicate_cmd.push(`;}\n`);
     return duplicate_cmd;
   }
   if (omf_yes.checked && nofilename_no.checked) {
@@ -438,7 +484,7 @@ function create_duplicate_cmd() {
     duplicate_command_check_standby();
     // duplicate_cmd.push(is_until());
     duplicate_cmd.push(`SPFILE\n`);
-    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
+    duplicate_cmd.push(get_controlfile());
     duplicate_cmd.push(
       `set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`
     );
@@ -449,8 +495,9 @@ function create_duplicate_cmd() {
     console.log("running DG convert in active duplicate");
     duplicate_command_check_standby();
     duplicate_cmd.push(`SPFILE\n`);
-    duplicate_cmd.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
-    duplicate_cmd.push(convert_parameters());
+    duplicate_cmd.push(get_controlfile());
+    duplicate_cmd.push(convert_df_parameters());
+    duplicate_cmd.push(convert_lf_parameters());
     duplicate_cmd.push(`;}`);
     return duplicate_cmd;
   }
@@ -469,12 +516,12 @@ function run_active_duplicate() {
 }
 
 function monitor_duplicate() {
-  return `Please monitor the /tmp/<duplicate>.log file to verify successful  completion. 
+  return `Please monitor the /tmp/<duplicate>.log file to verify successful completion. 
         If you receive any errors, please follow the doc# 1671431.1 and create an SR with the output`;
 }
 function verify_backup() {
   return `Make sure you have full backups along with archive logs 
-    Please run RMAN> restore preview; to get a list of backups that would be used.
+    Please run RMAN> restore preview; to get a list of backups that would be used.\n
     If not take a backup of spfile and full backup along with archive logs:
     RMAN> backup spfile;
     RMAN> backup database plus archivelog;`;
@@ -599,7 +646,6 @@ function create_ubkploc_duplicate() {
   duplicate_cmd_ubkploc.push(`set echo on;\n`);
   duplicate_cmd_ubkploc.push(`run {\n`);
   if (setnewname_yes.checked && omf_no.checked && nofilename_no.checked) {
-    console.log("WIP");
     duplicate_cmd_ubkploc.push(
       `set newname for database to '${standby_df_path_name}/%b';\n`
     );
@@ -612,7 +658,7 @@ function create_ubkploc_duplicate() {
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
     );
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`
+      `BACKUP LOCATION '<replace this with the path where backups were copied>';\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -631,7 +677,7 @@ function create_ubkploc_duplicate() {
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
     );
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`
+      `BACKUP LOCATION '<replace this with the path where backups were copied>';\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -657,7 +703,8 @@ function create_ubkploc_duplicate() {
     duplicate_cmd_ubkploc.push(`\nSPFILE\n`);
     duplicate_cmd_ubkploc.push(get_controlfile());
     // console.log("Calling convert");
-    duplicate_cmd_ubkploc.push(convert_parameters());
+    duplicate_cmd_ubkploc.push(convert_df_parameters());
+    duplicate_cmd_ubkploc.push(convert_lf_parameters());
     duplicate_cmd_ubkploc.push(
       `BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`
     );
@@ -720,9 +767,7 @@ function create_ucatnotar_duplicate() {
     );
     duplicate_cmd_ucatnotar.push(is_until());
     duplicate_cmd_ucatnotar.push(`\nSPFILE\n`);
-    duplicate_cmd_ucatnotar.push(
-      `set CONTROL_FILES='${standby_cf_path_name}'\n`
-    );
+    duplicate_cmd_ucatnotar.push(get_controlfile());
     duplicate_cmd_ucatnotar.push("NOFILENAMECHECK;\n");
     duplicate_cmd_ucatnotar.push(`}\n`);
     return duplicate_cmd_ucatnotar;
@@ -736,10 +781,8 @@ function create_ucatnotar_duplicate() {
     );
     duplicate_cmd_ucatnotar.push(is_until());
     duplicate_cmd_ucatnotar.push(`\nSPFILE\n`);
-    duplicate_cmd_ucatnotar.push(
-      `set CONTROL_FILES='${standby_cf_path_name};'\n`
-    );
-    duplicate_cmd_ucatnotar.push(`}\n`);
+    duplicate_cmd_ucatnotar.push(get_controlfile());
+    duplicate_cmd_ucatnotar.push(`;}\n`);
     return duplicate_cmd_ucatnotar;
   }
   if (omf_yes.checked && nofilename_no.checked) {
@@ -749,9 +792,7 @@ function create_ucatnotar_duplicate() {
     );
     duplicate_cmd_ucatnotar.push(is_until());
     duplicate_cmd_ucatnotar.push(`\nSPFILE\n`);
-    duplicate_cmd_ucatnotar.push(
-      `set CONTROL_FILES='${standby_cf_path_name}'\n`
-    );
+    duplicate_cmd_ucatnotar.push(get_controlfile());
     duplicate_cmd_ucatnotar.push(
       `set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`
     );
@@ -763,8 +804,9 @@ function create_ucatnotar_duplicate() {
   );
   duplicate_cmd_ucatnotar.push(is_until());
   duplicate_cmd_ucatnotar.push(`\nSPFILE\n`);
-  duplicate_cmd_ucatnotar.push(`set CONTROL_FILES='${standby_cf_path_name}'\n`);
-  duplicate_cmd_ucatnotar.push(convert_parameters());
+  duplicate_cmd_ucatnotar.push(get_controlfile());
+  duplicate_cmd_ucatnotar.push(convert_df_parameters());
+  duplicate_cmd_ucatnotar.push(convert_lf_parameters());
   duplicate_cmd_ucatnotar.push(`\n;}`);
   return duplicate_cmd_ucatnotar;
 }
@@ -829,13 +871,12 @@ function create_using_target_bkp_duplicate() {
 
   if (nofilename_yes.checked) {
     duplicate_cmd_usingtar.push(
-      `DUPLICATE TARGET DATABASE ${primary_db_name} to ${standby_db_name}\n`
+      // `DUPLICATE TARGET DATABASE ${primary_db_name} to ${standby_db_name}\n`
+      `DUPLICATE TARGET DATABASE to ${standby_db_name}\n`
     );
     duplicate_cmd_usingtar.push(is_until());
     duplicate_cmd_usingtar.push(`\nSPFILE\n`);
-    duplicate_cmd_usingtar.push(
-      `set CONTROL_FILES='${standby_cf_path_name}'\n`
-    );
+    duplicate_cmd_usingtar.push(get_controlfile());
     duplicate_cmd_usingtar.push("NOFILENAMECHECK;\n");
     duplicate_cmd_usingtar.push(`}\n`);
     return duplicate_cmd_usingtar;
@@ -845,39 +886,35 @@ function create_using_target_bkp_duplicate() {
       `set newname for database to '${standby_df_path_name}/%b';\n`
     );
     duplicate_cmd_usingtar.push(
-      `DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`
+      // `DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`
+      `DUPLICATE TARGET DATABASE to ${standby_db_name}\n`
     );
     duplicate_cmd_usingtar.push(is_until());
     duplicate_cmd_usingtar.push(`\nSPFILE\n`);
-    duplicate_cmd_usingtar.push(
-      `set CONTROL_FILES='${standby_cf_path_name};'\n`
-    );
-    duplicate_cmd_usingtar.push(`}\n`);
+    duplicate_cmd_usingtar.push(get_controlfile());
+    duplicate_cmd_usingtar.push(`;}\n`);
     return duplicate_cmd_usingtar;
   }
   if (omf_no.checked && nofilename_no.checked && setnewname_no.checked) {
     duplicate_cmd_usingtar.push(
-      `DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`
+      `DUPLICATE TARGET DATABASE to ${standby_db_name}\n`
     );
     duplicate_cmd_usingtar.push(is_until());
     duplicate_cmd_usingtar.push(`\nSPFILE\n`);
-    duplicate_cmd_usingtar.push(
-      `set CONTROL_FILES='${standby_cf_path_name}'\n`
-    );
-    duplicate_cmd_usingtar.push(convert_parameters());
+    duplicate_cmd_usingtar.push(get_controlfile());
+    duplicate_cmd_usingtar.push(convert_df_parameters());
+    duplicate_cmd_usingtar.push(convert_lf_parameters());
     duplicate_cmd_usingtar.push(`\n;}`);
     return duplicate_cmd_usingtar;
   }
   if (omf_yes.checked && nofilename_no.checked) {
     duplicate_cmd_usingtar.push(`set newname for database to new;\n`);
     duplicate_cmd_usingtar.push(
-      `DUPLICATE TARGET DATABASE ${primary_db_name} <dbid 1234 is optional> to ${standby_db_name}\n`
+      `DUPLICATE TARGET DATABASE to ${standby_db_name}\n`
     );
     duplicate_cmd_usingtar.push(is_until());
     duplicate_cmd_usingtar.push(`\nSPFILE\n`);
-    duplicate_cmd_usingtar.push(
-      `set CONTROL_FILES='${standby_cf_path_name}'\n`
-    );
+    duplicate_cmd_usingtar.push(get_controlfile());
     duplicate_cmd_usingtar.push(
       `set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`
     );
@@ -1018,7 +1055,8 @@ function create_stby_using_bkp_duplicate() {
   duplicate_cmd_usingstby.push(
     `set CONTTROL_FILES='${standby_cf_path_name}'\n`
   );
-  duplicate_cmd_usingstby.push(convert_parameters());
+  duplicate_cmd_usingstby.push(convert_df_parameters());
+  duplicate_cmd_usingstby.push(convert_lf_parameters());
   duplicate_cmd_usingstby.push(`\n;}`);
   return duplicate_cmd_usingstby;
 }
@@ -1028,11 +1066,11 @@ function create_standby_using_bkp_func() {
   document.getElementById("srl_bkp_stby").value = add_srl().join("");
   document.getElementById(
     "bkp_primary_stby"
-  ).value = `Make sure you have full backups along with archive logs RMAN> list backup;\nIf not take a backup of spfile and full backup along with archive logs`;
+  ).value = `Make sure you have full backups along with archive logs RMAN> list backup;\n\nIf not take a backup of spfile and full backup along with archive logs\n`;
   if (disk.checked) {
     document.getElementById(
       "move_backup_stby"
-    ).value = `move the backups from the source server to the destination server in exactly the same location where it was created on the source server.`;
+    ).value = `move the backups from the source server to the destination server in exactly the same location where it was created on the source server.\n`;
   } else {
     document.getElementById(
       "move_backup_stby"
@@ -1157,13 +1195,6 @@ function gen_instruction() {
   until_scn = document.getElementById("until_scn").value;
   until_log = document.getElementById("until_log").value;
 
-  if (primary_host_name === standby_host_name) {
-    show_error_meesage(
-      "Please stop using the tool and refer the doc: Using RMAN to Safely Clone a Database onto the Same Storage as the Source Database (Doc ID 2289796.1)"
-    );
-    // alert('')
-  }
-
   if (isActiveDuplicate.checked && isCloneDB.checked) {
     error_text.style.display = "none";
     active_duplicate();
@@ -1180,6 +1211,12 @@ function gen_instruction() {
     bkpDiv.style.display = "";
     //backup duplicate
     backup_duplicate();
+  }
+  if (primary_host_name === standby_host_name) {
+    show_error_meesage(
+      "Please stop using the tool and refer the doc: Using RMAN to Safely Clone a Database onto the Same Storage as the Source Database (Doc ID 2289796.1)"
+    );
+    // alert('')
   }
 }
 
