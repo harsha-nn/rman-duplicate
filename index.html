@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Restore and duplicate</title>
+    <title>RMANplicate</title>
     <link type="text/css" rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -113,7 +113,7 @@
               <input type="text" id="port_s_name" value="1521" />
             </td>
           </tr>
-          <tr id="l_domain_name">
+          <!-- <tr id="l_domain_name">
             <td>DB DOMAIN</td>
             <td>
               <input type="text" id="domain_p_name" value="" />
@@ -121,7 +121,7 @@
             <td>
               <input type="text" id="domain_s_name" value="" />
             </td>
-          </tr>
+          </tr> -->
 
           <tr id="is_nofilename">
             <td>
@@ -150,7 +150,7 @@
                 type="radio"
                 id="nofilename_no"
                 name="nofilename"
-                value="nofilenamecheck_no"
+                value="nofilenamecheck_no"                
                 onchange="nofilenamecheck(this)"
               />
               <label for="target">No</label><br />
@@ -816,6 +816,86 @@
           <br />Step 13: Verify DG config<br />
           <textarea
             id="verify_active_duplicate_bkp_stby"
+            name="message"
+            rows="15"
+            cols="90"
+          >
+          </textarea>
+
+          <!-- <p id="monitor_stby"></p> -->
+        </div>
+        <div id="create_standby_using_bkp_notarget">
+          create standby using bkp with no target connection
+          <br />Step 1: Add standby redo logs on primary database<br />
+          <textarea id="srl_bkp_stby_notarget" name="message" rows="8" cols="90">
+          </textarea>
+          <br />Step 2: Make sure you have backups on primary<br />
+          <textarea
+            id="bkp_primary_stby_notarget"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="bkp_primary_stby"></p> -->
+          <br />Step 3: Move backup pieces<br />
+          <textarea
+            id="move_backup_stby_notarget"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="move_backup_stby"></p> -->
+          <br />Step 4: Copy password file from primary to aux<br />
+          <textarea
+            id="copy_pwd_file_stby_notarget"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="copy_pwd_file_stby"></p> -->
+          <br />Step 5: Create pfile with only db_name parameter<br />
+          <textarea
+            id="create_pfile_stby_notarget"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="create_pfile_stby"></p> -->
+          <!-- <p id="rman_connectivity_stby"></p> -->
+          <br />Step 6: startup nomount the auxiliary server<br />
+          <textarea
+            id="startup_nomount_stby_notarget"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="startup_nomount_stby"></p> -->
+          <br />Step 7: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+          <textarea
+            id="duplicate_cmd_stby_notarget"
+            name="message"
+            rows="8"
+            cols="90"
+          ></textarea>
+          <!-- <p id="duplicate_cmd_stby"></p> -->
+          <br />Step 8: Connect to rman and execute the RMAN command file:<br />
+          <textarea id="run_stby_notarget" name="message" rows="15" cols="90">
+          </textarea>
+          <!-- <p id="run_stby"></p> -->
+          <br />Step 9: Monitor<br />
+          <textarea id="monitor_stby_notarget" name="message" rows="15" cols="90">
+          </textarea>
+          <br />Step 10: Configure DG Broker<br />
+          <textarea
+            id="broker_active_duplicate_bkp_stby_notarget"
+            name="message"
+            rows="15"
+            cols="90"
+          >
+          </textarea>
+          <br />Step 11: Verify DG config<br />
+          <textarea
+            id="verify_active_duplicate_bkp_stby_notarget"
             name="message"
             rows="15"
             cols="90"
