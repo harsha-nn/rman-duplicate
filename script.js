@@ -475,6 +475,9 @@ function create_duplicate_cmd() {
   if (nofilename_yes.checked) {
     duplicate_command_check_standby();
     duplicate_cmd.push(`SPFILE\n`);
+    if (isStandby.checked) {
+      duplicate_cmd.push(`SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`);
+    }
     duplicate_cmd.push(get_controlfile());
     duplicate_cmd.push(`nofilenamecheck;\n`);
     duplicate_cmd.push(`}\n`);
@@ -488,6 +491,9 @@ function create_duplicate_cmd() {
     duplicate_command_check_standby();
     // duplicate_cmd.push(is_until());
     duplicate_cmd.push(`SPFILE\n`);
+    if (isStandby.checked) {
+      duplicate_cmd.push(`SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`);
+    }
     duplicate_cmd.push(get_controlfile());
     duplicate_cmd.push(`;}\n`);
     return duplicate_cmd;
@@ -497,6 +503,9 @@ function create_duplicate_cmd() {
     duplicate_command_check_standby();
     // duplicate_cmd.push(is_until());
     duplicate_cmd.push(`SPFILE\n`);
+    if (isStandby.checked) {
+      duplicate_cmd.push(`SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`);
+    }
     duplicate_cmd.push(get_controlfile());
     duplicate_cmd.push(
       `set db_create_file_dest='${standby_df_path_name}'\nset DB_CREATE_ONLINE_LOG_DEST_1='${standby_lf_path_name}';\n`
@@ -508,6 +517,9 @@ function create_duplicate_cmd() {
     // console.log("running DG convert in active duplicate");
     duplicate_command_check_standby();
     duplicate_cmd.push(`SPFILE\n`);
+    if (isStandby.checked) {
+      duplicate_cmd.push(`SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`);
+    }
     duplicate_cmd.push(get_controlfile());
     duplicate_cmd.push(convert_df_parameters());
     duplicate_cmd.push(convert_lf_parameters());
@@ -1013,6 +1025,9 @@ function create_stby_using_bkp_duplicate() {
     duplicate_cmd_usingstby.push(is_until());
     duplicate_cmd_usingstby.push(`\nSPFILE\n`);
     duplicate_cmd_usingstby.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
+    duplicate_cmd_usingstby.push(
       `set CONTTROL_FILES='${standby_cf_path_name}'`
     );
     duplicate_cmd_usingstby.push("\nnofilenamecheck dorecover;\n");
@@ -1030,6 +1045,9 @@ function create_stby_using_bkp_duplicate() {
     duplicate_cmd_usingstby.push(is_until());
     duplicate_cmd_usingstby.push(`\nSPFILE\n`);
     duplicate_cmd_usingstby.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
+    duplicate_cmd_usingstby.push(
       `set CONTTROL_FILES='${standby_cf_path_name}'`
     );
 
@@ -1046,6 +1064,9 @@ function create_stby_using_bkp_duplicate() {
     duplicate_cmd_usingstby.push(is_until());
     duplicate_cmd_usingstby.push(`\nSPFILE\n`);
     duplicate_cmd_usingstby.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
+    duplicate_cmd_usingstby.push(
       `set CONTTROL_FILES='${standby_cf_path_name}'`
     );
     duplicate_cmd_usingstby.push(
@@ -1061,6 +1082,9 @@ function create_stby_using_bkp_duplicate() {
   duplicate_cmd_usingstby.push(`duplicate target database for standby \n`);
   duplicate_cmd_usingstby.push(is_until());
   duplicate_cmd_usingstby.push(`\nSPFILE\n`);
+  duplicate_cmd_usingstby.push(
+    `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+  );
   duplicate_cmd_usingstby.push(
     `set CONTTROL_FILES='${standby_cf_path_name}'\n`
   );
@@ -1133,6 +1157,9 @@ function create_standby_ubkploc_duplicate() {
     //check if set_until_time is checked
     duplicate_cmd_ubkploc.push(is_until());
     duplicate_cmd_ubkploc.push(`\nSPFILE\n`);
+    duplicate_cmd_ubkploc.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
     duplicate_cmd_ubkploc.push(get_controlfile());
     duplicate_cmd_ubkploc.push(
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
@@ -1149,6 +1176,9 @@ function create_standby_ubkploc_duplicate() {
     //check if set_until_time is checked
     duplicate_cmd_ubkploc.push(is_until());
     duplicate_cmd_ubkploc.push(`\nSPFILE\n`);
+    duplicate_cmd_ubkploc.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
     duplicate_cmd_ubkploc.push(get_controlfile());
     duplicate_cmd_ubkploc.push(
       `SET DB_CREATE_FILE_DEST='${standby_df_path_name}'\n`
@@ -1168,6 +1198,9 @@ function create_standby_ubkploc_duplicate() {
     //check if set_until_time is checked
     duplicate_cmd_ubkploc.push(is_until());
     duplicate_cmd_ubkploc.push(`\nSPFILE\n`);
+    duplicate_cmd_ubkploc.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
     duplicate_cmd_ubkploc.push(get_controlfile());
     duplicate_cmd_ubkploc.push(
       `BACKUP LOCATION '<replace this with the path where backups were copied>'\n`
@@ -1181,6 +1214,9 @@ function create_standby_ubkploc_duplicate() {
     //check if set_until_time is checked
     duplicate_cmd_ubkploc.push(is_until());
     duplicate_cmd_ubkploc.push(`\nSPFILE\n`);
+    duplicate_cmd_ubkploc.push(
+      `SET DB_UNIQUE_NAME=${standby_db_unique_name}\n`
+    );
     duplicate_cmd_ubkploc.push(get_controlfile());
     // console.log("Calling convert");
     duplicate_cmd_ubkploc.push(convert_df_parameters());
