@@ -29,7 +29,9 @@ var error_text = document.getElementById("error_text");
 var create_standby_using_bkp = document.getElementById(
   "create_standby_using_bkp"
 );
-
+var create_standby_using_bkp_notarget = document.getElementById(
+  "create_standby_using_bkp_notarget"
+);
 //DB variables
 var primary_db_name = document.getElementById("db_p_name").value; //db_name
 var standby_db_name = document.getElementById("db_s_name").value;
@@ -284,7 +286,7 @@ function create_pfile() {
   //   );
   // }
   pfile_text.push(
-    `\n\nIf your source database is multitenant add the below parameter: \nenable_pluggable_database=true\n`
+    `\n\nIf your source database is multi-tenant add the below parameter: \nenable_pluggable_database=true\n`
   );
   return pfile_text;
 }
@@ -302,7 +304,7 @@ function create_omf_pfile() {
   //   );
   // }
   pfile_text.push(
-    `if your standby is multitenant add the below parameter \nenable_pluggable_database=true\n`
+    `if your standby is multi-tenant add the below parameter \nenable_pluggable_database=true\n`
   );
   return pfile_text;
 }
@@ -315,10 +317,10 @@ function create_pwdfile() {
       `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n\n`
     );
     pwd_file.push(
-      `If it does not exist, create a password file on target: orapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_unique_name}.ora PASSWORD=<password>\n`
+      `If it does not exist, create a password file on target: \norapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_unique_name}.ora PASSWORD=<password>\n`
     );
     pwd_file.push(
-      `copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n`
+      `\ncopy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n`
     );
   } else {
     pwd_file.push(
@@ -336,11 +338,11 @@ function create_pwdfile() {
 }
 
 function startup_nomount() {
-  return `$export ORACLE_SID=${standby_db_unique_name}\n$sqlplus as sysdba \n\nSQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`;
+  return `$export ORACLE_SID=${standby_db_unique_name}\n$sqlplus / as sysdba \n\nSQL> startup nomount pfile=$ORACLE_HOME/dbs/init${standby_db_unique_name}.ora`;
 }
 
 function verify_rman_connectivity() {
-  return `Please start the listener:\nlsnrctl start\n\nverify tnsping connectivity:\ntnsping ${standby_db_unique_name}\ntnsping ${primary_db_unique_name}\n\nverify rman connectivit:\nrman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nif this fails, check listener and tns\n\nif succeeds, proceed to next step`;
+  return `Please start the listener:\nlsnrctl start\n\nverify tnsping connectivity:\ntnsping ${standby_db_unique_name}\ntnsping ${primary_db_unique_name}\n\nverify rman connectivit:\nrman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nIf the connection fails, check the listener and tns entries.\n\nIf the connection fails, check the listener and tns entries.`;
 }
 
 function convert_df_parameters() {
@@ -451,9 +453,7 @@ function duplicate_command_check_standby() {
   }
 }
 function create_duplicate_cmd() {
-  duplicate_cmd = [
-    `Create a file: rman_active_duplicate.cmd and enter the below:\n`,
-  ];
+  duplicate_cmd = [];
   duplicate_cmd.push(
     `connect target sys/<pwd>@${primary_db_unique_name} \nconnect auxiliary sys/<pwd>@${standby_db_unique_name} \n`
   );
@@ -542,16 +542,16 @@ function run_active_duplicate() {
 }
 
 function monitor_duplicate() {
-  return `Please monitor the /tmp/<duplicate>.log file to verify successful completion.\n
+  return `Monitor the /tmp/<duplicate>.log file to verify successful completion.\n
   If you receive any errors, capture the diagnostic details on auxiliary outlined in:
   SRDC - Required Diagnostic Data Collection for RMAN Issues (Doc ID 1671431.1)	
-  and create a service request with the output generated.`;
+  and create a service request with the output generated. \nIf the completion was successful, proceed with the next step. `;
 }
 function verify_backup() {
   if (isStandby.checked) {
     return `Please take a backup of primary database like below:\n\nRMAN> backup database format '/tmp/prim/PRIM_%U';\nRMAN> backup archivelog all format '/tmp/prim/PRIM_ARC_%U';\nRMAN> backup current controlfile for standby format '/tmp/prim/PRIM_CONTROL.bkp';\n`;
   }
-  return `If you are not using an existing backup, backup the database, like:\n\nRMAN> backup spfile format '/<backup location>/clone_spfile_%U';\nRMAN> backup database plus archivelog format '/<backup location>/clone_db_%U';\nRMAN> backup current controlfile format '/<backup location>/clone_cf_%U';\n`;
+  return `If you are not using an existing backup, backup the primary database, like:\n\nRMAN> backup spfile format '/<backup location>/clone_spfile_%U';\nRMAN> backup database plus archivelog format '/<backup location>/clone_db_%U';\nRMAN> backup current controlfile format '/<backup location>/clone_cf_%U';\n`;
 }
 function active_duplicate() {
   //  if( isActiveDuplicate.checked && isDuplicate.checked){
@@ -585,14 +585,18 @@ function active_duplicate() {
 function add_srl() {
   let add_srl = [];
   add_srl.push(
-    `Standby redo logs should be of the same size as that of primary online redo logs.\n`
+    `Review the following to add standby redo log files to your primary database:\nHandling ORL and SRL (Resize) on Primary and Physical Standby in Data Guard Environment (Doc ID 1532566.1)\n`
   );
   add_srl.push(
-    `For eg: If primary has 2 groups in thread 1, standby should have 3 groups in corresponding thread 1\n`
+    `Note, standby redo logs must be the same size as the primary online redo log files with an additional log group.\n  
+    For example, If primary has 3 online redo log groups of 2G each, it should also have 4 standby redo log groups of 2G each..\n`
   );
-  add_srl.push(
-    `Refer note: Handling ORL and SRL (Resize) on Primary and Physical Standby in Data Guard Environment (Doc ID 1532566.1)`
-  );
+  // add_srl.push(
+  //   `For eg: If primary has 2 groups in thread 1, standby should have 3 groups in corresponding thread 1\n`
+  // );
+  // add_srl.push(
+  //   `Refer note: Handling ORL and SRL (Resize) on Primary and Physical Standby in Data Guard Environment (Doc ID 1532566.1)`
+  // );
   return add_srl;
 }
 function configure_broker() {
@@ -685,7 +689,7 @@ function create_ubkploc_duplicate() {
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
     );
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>';\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>';\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -704,7 +708,7 @@ function create_ubkploc_duplicate() {
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
     );
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>';\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>';\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -717,7 +721,7 @@ function create_ubkploc_duplicate() {
     duplicate_cmd_ubkploc.push(`\nSPFILE\n`);
     duplicate_cmd_ubkploc.push(get_controlfile());
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>'\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>'\n`
     );
     duplicate_cmd_ubkploc.push("NOFILENAMECHECK;\n");
     duplicate_cmd_ubkploc.push(`}\n`);
@@ -733,7 +737,7 @@ function create_ubkploc_duplicate() {
     duplicate_cmd_ubkploc.push(convert_df_parameters());
     duplicate_cmd_ubkploc.push(convert_lf_parameters());
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>;'\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -1165,7 +1169,7 @@ function create_standby_ubkploc_duplicate() {
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
     );
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>';\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>';\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -1187,7 +1191,7 @@ function create_standby_ubkploc_duplicate() {
       `SET DB_CREATE_ONLINE_DEST_1='${standby_lf_path_name}'\n`
     );
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>';\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>';\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -1203,7 +1207,7 @@ function create_standby_ubkploc_duplicate() {
     );
     duplicate_cmd_ubkploc.push(get_controlfile());
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>'\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>'\n`
     );
     duplicate_cmd_ubkploc.push("NOFILENAMECHECK;\n");
     duplicate_cmd_ubkploc.push(`}\n`);
@@ -1222,7 +1226,7 @@ function create_standby_ubkploc_duplicate() {
     duplicate_cmd_ubkploc.push(convert_df_parameters());
     duplicate_cmd_ubkploc.push(convert_lf_parameters());
     duplicate_cmd_ubkploc.push(
-      `BACKUP LOCATION '<replace this with the path where backups were copied>;'\n`
+      `BACKUP LOCATION '<enter path on auxiliary where the backups were copied>;'\n`
     );
     duplicate_cmd_ubkploc.push(`}\n`);
     return duplicate_cmd_ubkploc;
@@ -1291,27 +1295,31 @@ function backup_duplicate() {
   }
   //if no target no catalog//call using_bkp_location
   if (target_no.checked && catalog_no.checked && disk.checked) {
-    using_catalog_notarget.style.display = "none";
     using_target.style.display = "none";
     error_text.style.display = "none";
+    using_catalog_notarget.style.display = "none";
     create_standby_using_bkp.style.display = "none";
+    create_standby_using_bkp_notarget.style.display = "none";
     using_backup_location();
   }
   //if not target but catalog -- check tape or disk in allocate channel -- call notargetwithcatalog
   if (target_no.checked && catalog_yes.checked) {
+    create_standby_using_bkp.style.display = "none";
     using_target.style.display = "none";
     using_nocatalog_notarget.style.display = "none";
     error_text.style.display = "none";
     create_standby_using_bkp.style.display = "none";
+    create_standby_using_bkp_notarget.style.display = "none";
     targetless_with_catalog();
   }
   //if target -- check tape or disk in allocate channel -- create sqlnet -- call target_based_backup
   if (target_yes.checked) {
     //create duplicate script
+    create_standby_using_bkp.style.display = "none";
     using_nocatalog_notarget.style.display = "none";
     using_catalog_notarget.style.display = "none";
     error_text.style.display = "none";
-    create_standby_using_bkp.style.display = "none";
+    create_standby_using_bkp_notarget.style.display = "none";
     using_target_bkp_duplicate();
   }
   if (isBackupDuplicate.checked && isStandby.checked) {
