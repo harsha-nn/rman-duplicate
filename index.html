@@ -127,11 +127,11 @@
             <td>
               Will the target and auxiliary datafiles/logfiles reside in the same directory structure?
               <div class="myDIV">
-              <img src="help_512x512.png" class="myDIV" />
+              <!-- <img src="help_512x512.png" class="myDIV" />
               <span class="hide">
                 For eg: all data files in target are on /oracle/oradata and
                 they will be the same location on auxiliary
-              </span>
+              </span> -->
             </div>
             </td>
             <td>
@@ -159,11 +159,11 @@
           <tr id="is_setnewname">
             <td>Will all the datafiles of the auxiliary reside in one mount point?
                 <div class="myDIV">
-                <img src="help_512x512.png" class="myDIV" />
+                <!-- <img src="help_512x512.png" class="myDIV" />
                 <span class="hide">
                   For eg: all data files in auxiliary are going to be on  +DATADG                  
-                </span> 
-                </div>
+                </span>  -->
+                </div> 
               </td>
             </td>
             <td>
@@ -188,11 +188,11 @@
           </tr>
           <tr id="is_omf_stby">
             <td>Will you be using Oracle Managed File (OMF) names on the auxiliary?
-                <div class="myDIV">
-                    <img src="help_512x512.png" class="myDIV" />
+                 <div class="myDIV">
+                    <!-- <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
                       For eg: all data files in auxiliary are going using OMF                  
-                    </span> 
+                    </span>   -->
             </td>
             <td>
               <input type="radio" id="omf_yes" name="omf" value="omf" />
@@ -301,10 +301,10 @@
           <tr id="target">
             <td>Can you connect to target?
                 <div class="myDIV">
-                    <img src="help_512x512.png" class="myDIV" />
+                    <!-- <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
                       Connecting to the target is not required if backups are available on disk                  
-                    </span> 
+                    </span>  -->
                 </div>
             </td>
             <td>
@@ -381,11 +381,11 @@
               />
               <label for="no_set_until">No
                 <div class="myDIV">
-                    <img src="help_512x512.png" class="myDIV" />
+                    <!-- <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
                       How to use set until?
                       None: if you are using backup location                   
-                    </span> 
+                    </span>  -->
               </label><br />
             </td>
             <td>
@@ -403,11 +403,11 @@
               />
               <label for="time">Time
                 <div class="myDIV">
-                    <img src="help_512x512.png" class="myDIV" />
+                    <!-- <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
                       How to use set until?
                       until time: Use time after the last backup is completed                  
-                    </span> 
+                    </span>  -->
               </label>
             </td>
             <td>
@@ -420,11 +420,11 @@
               <input type="text" id="until_scn" value="123456" />
               <label for="SCN">SCN
                 <div class="myDIV">
-                    <img src="help_512x512.png" class="myDIV" />
+                    <!-- <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
                       How to use set until?
                       scn: RMAN> list backup; //pick the scn of the last available archive log                 
-                    </span> 
+                    </span>  -->
               </label>
             </td>
             <td>
@@ -437,11 +437,11 @@
               <input type="text" id="until_log" value="3456" />
               <label for="log_seq">log sequence
                 <div class="myDIV">
-                    <img src="help_512x512.png" class="myDIV" />
+                    <!-- <img src="help_512x512.png" class="myDIV" />
                     <span class="hide">
                       How to use set until?
                       log seq: RMAN> list backup; //pick the scn of the last available archive log seq                   
-                    </span> 
+                    </span>  -->
               </label>
             </td>
           </tr>
@@ -463,7 +463,7 @@
       <div id="active_duplicate_div" class="grid-item">
         Step 1: Create auxiliary pfile<br />
         <textarea id="pfile" name="message" rows="8" cols="90"></textarea>
-        <br />Step 2: copy the password File<br />
+        <br />Step 2: Copy the password File<br />
         <textarea id="pwdfile" name="message" rows="8" cols="90"> </textarea>
         <br />Step 3: Nomount the auxiliary instance using pfile<br />
         <textarea id="startup_nomount" name="message" rows="8" cols="90">
@@ -477,7 +477,7 @@
         <br />Step 5: Verify rman connectivity<br />
         <textarea id="rman_connectivity" name="message" rows="8" cols="90">
         </textarea>
-        <br />Step 6: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+        <br />Step 6: Create an RMAN command file and enter the below:<br />
         <textarea id="duplicate_cmd" name="message" rows="15" cols="90">
         </textarea>
         <br />Step 7: Connect to rman and execute the RMAN command file:<br />
@@ -503,7 +503,7 @@
           rows="8"
           cols="90"
         ></textarea>
-        <br />Step 3: copy the password File<br />
+        <br />Step 3: Copy the password File<br />
         <textarea id="pwdfile_ad_stby" name="message" rows="8" cols="90">
         </textarea>
         <br />Step 4: Nomount the auxiliary instance using pfile<br />
@@ -530,7 +530,7 @@
           cols="90"
         >
         </textarea>
-        <br />Step 7: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+        <br />Step 7: Create an RMAN command file and enter the below:<br />
         <textarea id="duplicate_cmd_ad_stby" name="message" rows="15" cols="90">
         </textarea>
         <br />Step 8: Connect to rman and execute the RMAN command file:<br />
@@ -594,14 +594,14 @@
             rows="8"
             cols="90"
           ></textarea>
-          <br />Step 4: startup nomount the auxiliary server<br />
+          <br />Step 4: Startup nomount the auxiliary server<br />
           <textarea
             id="startup_nomount_ubkploc"
             name="message"
             rows="8"
             cols="90"
           ></textarea>
-          <br />Step 5: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+          <br />Step 5: Create an RMAN command file and enter the below:<br />
           <textarea
             id="duplicate_cmd_ubkploc"
             name="message"
@@ -638,14 +638,14 @@
             rows="8"
             cols="90"
           ></textarea>
-          <br />Step 4: startup nomount the auxiliary server<br />
+          <br />Step 4: Startup nomount the auxiliary server<br />
           <textarea
             id="startup_nomount_ucatnotar"
             name="message"
             rows="8"
             cols="90"
           ></textarea>
-          <br />Step 5: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+          <br />Step 5: Create an RMAN command and enter the below:<br />
           <textarea
             id="duplicate_cmd_ucatnotar"
             name="message"
@@ -697,7 +697,7 @@
           and auxiliary<br />
           <textarea id="tns_usingtar" name="message" rows="15" cols="90">
           </textarea>
-          <br />Step 5: startup nomount the auxiliary server<br />
+          <br />Step 5: Startup nomount the auxiliary server<br />
           <textarea
             id="startup_nomount_usingtar"
             name="message"
@@ -712,7 +712,7 @@
             cols="90"
           >
           </textarea>
-          <br />Step 7: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+          <br />Step 7: Create an RMAN command file and enter the below:<br />
           <textarea
             id="duplicate_cmd_usingtar"
             name="message"
@@ -782,7 +782,7 @@
           >
           </textarea>
           <!-- <p id="rman_connectivity_stby"></p> -->
-          <br />Step 8: startup nomount the auxiliary server<br />
+          <br />Step 8: Startup nomount the auxiliary server<br />
           <textarea
             id="startup_nomount_stby"
             name="message"
@@ -790,7 +790,7 @@
             cols="90"
           ></textarea>
           <!-- <p id="startup_nomount_stby"></p> -->
-          <br />Step 9: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+          <br />Step 9: Create an RMAN command file and enter the below:<br />
           <textarea
             id="duplicate_cmd_stby"
             name="message"
@@ -862,7 +862,7 @@
           ></textarea>
           <!-- <p id="create_pfile_stby"></p> -->
           <!-- <p id="rman_connectivity_stby"></p> -->
-          <br />Step 6: startup nomount the auxiliary server<br />
+          <br />Step 6: Startup nomount the auxiliary server<br />
           <textarea
             id="startup_nomount_stby_notarget"
             name="message"
@@ -870,7 +870,7 @@
             cols="90"
           ></textarea>
           <!-- <p id="startup_nomount_stby"></p> -->
-          <br />Step 7: Create an RMAN command file, rman_active_duplicate.cmd, and enter the below:<br />
+          <br />Step 7: Create an RMAN command file and enter the below:<br />
           <textarea
             id="duplicate_cmd_stby_notarget"
             name="message"

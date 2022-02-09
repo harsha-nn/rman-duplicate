@@ -280,6 +280,11 @@ function create_pfile() {
     pfile_text.push(`DB_NAME=${standby_db_name}\n`);
     pfile_text.push(`DB_UNIQUE_NAME=${standby_db_unique_name}`);
   }
+  if (isBackupDuplicate.checked) {
+    pfile_text.push(
+      `\n\nIf not using default value in the target, the following may also need to be set:\ndb_block_size\ncompatible\n`
+    );
+  }
   // if (isActiveDuplicate.checked) {
   //   pfile_text.push(
   //     `\n\nIf your source database is multitenant add the below parameter: \nenable_pluggable_database=true\n`
@@ -317,7 +322,7 @@ function create_pwdfile() {
       `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n\n`
     );
     pwd_file.push(
-      `If it does not exist, create a password file on target: \norapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_unique_name}.ora PASSWORD=<password>\n`
+      `If it does not exist, create a password file on target: \n$orapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_unique_name}.ora PASSWORD=<password>\n`
     );
     pwd_file.push(
       `\ncopy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_unique_name}.ora\n`
@@ -327,7 +332,7 @@ function create_pwdfile() {
       `If exists, copy the password file to $ORACLE_HOME/dbs on the auxiliary and rename it to orapw${standby_db_name}.ora\n\n`
     );
     pwd_file.push(
-      `If it does not exist, create a password file on target: orapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_name}.ora PASSWORD=<password>\n`
+      `If it does not exist, create a password file on target: \n$orapwd FILE=$ORACLE_HOME/dbs/orapw${primary_db_name}.ora PASSWORD=<password>\n`
     );
     pwd_file.push(
       `copy the password file to $ORACLE_HOME/dbs on the destination database and rename it to orapw${standby_db_name}.ora\n`
@@ -342,7 +347,7 @@ function startup_nomount() {
 }
 
 function verify_rman_connectivity() {
-  return `Please start the listener:\nlsnrctl start\n\nverify tnsping connectivity:\ntnsping ${standby_db_unique_name}\ntnsping ${primary_db_unique_name}\n\nverify rman connectivit:\nrman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nIf the connection fails, check the listener and tns entries.\n\nIf the connection fails, check the listener and tns entries.`;
+  return `Start the listener:\n$lsnrctl start\n\nverify tnsping connectivity:\n$tnsping ${standby_db_unique_name}\n$tnsping ${primary_db_unique_name}\n\nverify rman connectivity:\n$rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} \n\nIf the connection fails, check the listener and tns entries.\n`;
 }
 
 function convert_df_parameters() {
@@ -455,6 +460,9 @@ function duplicate_command_check_standby() {
 function create_duplicate_cmd() {
   duplicate_cmd = [];
   duplicate_cmd.push(
+    `Create a file: rman_duplicate.cmd and enter the below:\n`
+  );
+  duplicate_cmd.push(
     `connect target sys/<pwd>@${primary_db_unique_name} \nconnect auxiliary sys/<pwd>@${standby_db_unique_name} \n`
   );
   duplicate_cmd.push(`set echo on;\n`);
@@ -535,21 +543,21 @@ function run_active_duplicate() {
   run_dup = [];
   run_dup.push(
     // `rman target sys/<pwd>@${primary_db_unique_name} auxiliary sys/<pwd>@${standby_db_unique_name} log=/tmp/rman_active_duplicate.log\n`
-    `$rman log=/tmp/rman_active_duplicate.log\n`
+    `$rman log=/tmp/rman_duplicate.log\n`
   );
-  run_dup.push(`RMAN>@rman_active_duplicate.cmd`);
+  run_dup.push(`RMAN>@rman_duplicate.cmd`);
   return run_dup;
 }
 
 function monitor_duplicate() {
-  return `Monitor the /tmp/<duplicate>.log file to verify successful completion.\n
+  return `Monitor the /tmp/rman_duplicate.log file to verify successful completion.\n
   If you receive any errors, capture the diagnostic details on auxiliary outlined in:
   SRDC - Required Diagnostic Data Collection for RMAN Issues (Doc ID 1671431.1)	
-  and create a service request with the output generated. \nIf the completion was successful, proceed with the next step. `;
+  and create a service request with the output generated. \n`;
 }
 function verify_backup() {
   if (isStandby.checked) {
-    return `Please take a backup of primary database like below:\n\nRMAN> backup database format '/tmp/prim/PRIM_%U';\nRMAN> backup archivelog all format '/tmp/prim/PRIM_ARC_%U';\nRMAN> backup current controlfile for standby format '/tmp/prim/PRIM_CONTROL.bkp';\n`;
+    return `Take a backup of primary database like below:\n\nRMAN> backup database format '/tmp/prim/PRIM_%U';\nRMAN> backup archivelog all format '/tmp/prim/PRIM_ARC_%U';\nRMAN> backup current controlfile for standby format '/tmp/prim/PRIM_CONTROL.bkp';\n`;
   }
   return `If you are not using an existing backup, backup the primary database, like:\n\nRMAN> backup spfile format '/<backup location>/clone_spfile_%U';\nRMAN> backup database plus archivelog format '/<backup location>/clone_db_%U';\nRMAN> backup current controlfile format '/<backup location>/clone_cf_%U';\n`;
 }
@@ -1291,7 +1299,9 @@ function backup_duplicate() {
   if (target_no.checked && catalog_no.checked && tape.checked) {
     // console.log("You cannot use backup based duplicate")
     // console.log(error_text);
-    show_error_meesage("You cannot use backup based duplicate");
+    show_error_meesage(
+      "You cannot use tape backup without connecting to either target or catalog"
+    );
   }
   //if no target no catalog//call using_bkp_location
   if (target_no.checked && catalog_no.checked && disk.checked) {
@@ -1377,7 +1387,7 @@ function gen_instruction() {
   until_log = document.getElementById("until_log").value;
   if (primary_host_name === standby_host_name) {
     show_error_meesage(
-      "Please do not use the nofilenamecheck option. Ref: Using RMAN to Safely Clone a Database onto the Same Storage as the Source Database (Doc ID 2289796.1)"
+      "Do not use the nofilenamecheck option. Ref: Using RMAN to Safely Clone a Database onto the Same Storage as the Source Database (Doc ID 2289796.1)"
     );
     document.getElementById("nofilename_no").checked = true;
     document.getElementById("is_setnewname").style.display = "";
